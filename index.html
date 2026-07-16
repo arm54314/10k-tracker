@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แผนซ้อม 10K — ติดตามผล</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#ffffff; --ink:#1f2430; --sub:#6b7280; --line:#e5e7eb;
+    --easy:#3b82f6; --easy-bg:#eaf1fd;
+    --quality:#f97316; --quality-bg:#fef1e6;
+    --long:#8b5cf6; --long-bg:#f2ecfd;
+    --rest:#9ca3af; --rest-bg:#f1f2f4;
+    --cross:#14b8a6; --cross-bg:#e6f8f5;
+    --test:#eab308; --test-bg:#fdf7e0;
+    --shakeout:#38bdf8; --shakeout-bg:#e7f6fd;
+    --race:#dc2626; --race-bg:#fde8e8;
+    --done:#16a34a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;
+    background:var(--bg); color:var(--ink); padding-bottom:60px;
+  }
+  header{
+    background:linear-gradient(135deg,#1f2937,#111827); color:#fff; padding:22px 16px 18px;
+  }
+  header h1{margin:0 0 4px; font-size:1.3rem;}
+  header p{margin:2px 0; font-size:0.85rem; color:#cbd5e1;}
+  .stats{
+    display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;
+  }
+  .stat{
+    background:rgba(255,255,255,0.08); border-radius:10px; padding:8px 14px; flex:1; min-width:110px;
+  }
+  .stat .num{font-size:1.25rem; font-weight:700;}
+  .stat .lbl{font-size:0.72rem; color:#cbd5e1;}
+
+  .toolbar{
+    max-width:960px; margin:14px auto 0; padding:0 16px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+  }
+  .toolbar button{
+    background:var(--card); border:1px solid var(--line); border-radius:8px; padding:7px 12px;
+    font-size:0.82rem; cursor:pointer; color:var(--ink);
+  }
+  .toolbar button:hover{background:#f0f1f3;}
+  .toolbar input[type=file]{display:none;}
+
+  .legend{
+    max-width:960px; margin:12px auto 0; padding:0 16px; display:flex; gap:8px; flex-wrap:wrap; font-size:0.72rem;
+  }
+  .legend span{display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:20px; background:var(--card); border:1px solid var(--line);}
+  .dot{width:9px; height:9px; border-radius:50%; display:inline-block;}
+
+  main{max-width:960px; margin:0 auto; padding:16px;}
+  .week{margin-bottom:22px;}
+  .week-title{
+    font-size:0.85rem; font-weight:700; color:var(--sub); margin:0 0 8px; display:flex; justify-content:space-between; align-items:baseline;
+  }
+  .week-title .sub{font-weight:400; font-size:0.75rem;}
+
+  .grid{
+    display:grid; grid-template-columns:repeat(7,1fr); gap:8px;
+  }
+  .day{
+    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:8px 7px;
+    min-height:92px; cursor:pointer; position:relative; transition:transform .1s;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .day:hover{transform:translateY(-2px); box-shadow:0 4px 10px rgba(0,0,0,0.06);}
+  .day.today{outline:2px solid #111827; outline-offset:1px;}
+  .day .dow{font-size:0.65rem; color:var(--sub);}
+  .day .dnum{font-size:0.85rem; font-weight:700;}
+  .badge{
+    align-self:flex-start; font-size:0.62rem; font-weight:700; padding:2px 6px; border-radius:6px; margin-top:1px;
+  }
+  .day .title{font-size:0.68rem; color:var(--ink); line-height:1.25; flex:1;}
+  .check{
+    position:absolute; top:6px; right:6px; width:16px; height:16px; border-radius:50%;
+    background:var(--done); color:#fff; font-size:10px; display:flex; align-items:center; justify-content:center;
+  }
+
+  .type-easy .badge{background:var(--easy-bg); color:var(--easy);}
+  .type-quality .badge{background:var(--quality-bg); color:var(--quality);}
+  .type-long .badge{background:var(--long-bg); color:var(--long);}
+  .type-rest .badge{background:var(--rest-bg); color:var(--rest);}
+  .type-cross .badge{background:var(--cross-bg); color:var(--cross);}
+  .type-test .badge{background:var(--test-bg); color:#a16207;}
+  .type-shakeout .badge{background:var(--shakeout-bg); color:#0284c7;}
+  .type-race{background:var(--race-bg); border-color:var(--race);}
+  .type-race .badge{background:var(--race); color:#fff;}
+
+  @media (max-width:640px){
+    .grid{grid-template-columns:1fr;}
+    .day{flex-direction:row; align-items:center; min-height:auto; padding:10px;}
+    .day .dow{width:34px;}
+    .day .dnum{width:26px;}
+    .day .title{font-size:0.75rem;}
+    .badge{margin-top:0;}
+  }
+
+  .overlay{
+    position:fixed; inset:0; background:rgba(15,23,42,0.5); display:none; align-items:flex-end; justify-content:center; z-index:50;
+  }
+  .overlay.open{display:flex;}
+  .sheet{
+    background:#fff; width:100%; max-width:520px; border-radius:16px 16px 0 0; padding:20px; max-height:88vh; overflow-y:auto;
+    animation:up .18s ease-out;
+  }
+  @media (min-width:640px){
+    .overlay{align-items:center;}
+    .sheet{border-radius:16px; margin-bottom:40px;}
+  }
+  @keyframes up{from{transform:translateY(30px); opacity:0;} to{transform:translateY(0); opacity:1;}}
+  .sheet h2{margin:0 0 2px; font-size:1.05rem;}
+  .sheet .meta{font-size:0.78rem; color:var(--sub); margin-bottom:12px;}
+  .sheet .detailbox{
+    background:#f7f8fa; border-radius:10px; padding:12px; font-size:0.85rem; line-height:1.5; margin-bottom:16px;
+  }
+  .sheet label{display:block; font-size:0.78rem; font-weight:600; margin:10px 0 4px;}
+  .sheet input, .sheet select, .sheet textarea{
+    width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-size:0.88rem; font-family:inherit;
+  }
+  .sheet textarea{min-height:60px; resize:vertical;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .sheet .actions{display:flex; gap:8px; margin-top:16px;}
+  .sheet .actions button{
+    flex:1; padding:10px; border-radius:8px; border:none; font-size:0.9rem; cursor:pointer; font-weight:600;
+  }
+  .btn-save{background:#111827; color:#fff;}
+  .btn-close{background:#f1f2f4; color:var(--ink);}
+  .savedmsg{font-size:0.75rem; color:var(--done); margin-top:8px; display:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏃 แผนซ้อม 10K — เป้าหมาย 6 กันยายน 2026</h1>
+  <p>อ้างอิงระบบ Jack Daniels · เป้าหมาย: จบให้ไวที่สุดเท่าที่ยัง healthy</p>
+  <div class="stats">
+    <div class="stat"><div class="num" id="statDaysLeft">-</div><div class="lbl">วันจนถึงวันแข่ง</div></div>
+    <div class="stat"><div class="num" id="statLogged">0</div><div class="lbl">วันที่บันทึกผลแล้ว</div></div>
+    <div class="stat"><div class="num" id="statKm">0</div><div class="lbl">กม.สะสม (บันทึกจริง)</div></div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <button onclick="scrollToToday()">📍 ไปยังสัปดาห์นี้</button>
+  <button onclick="exportData()">⬇️ Export ข้อมูล</button>
+  <button onclick="document.getElementById('importFile').click()">⬆️ Import ข้อมูล</button>
+  <input type="file" id="importFile" accept="application/json" onchange="importData(event)">
+</div>
+<p style="max-width:960px;margin:8px auto 0;padding:0 16px;font-size:0.72rem;color:#6b7280;">
+  ℹ️ ข้อมูลที่บันทึกจะเก็บไว้ในเบราว์เซอร์/อุปกรณ์นี้เท่านั้น ถ้าต้องการใช้ทั้งคอมและมือถือให้ข้อมูลตรงกัน ให้กด <b>Export</b> จากเครื่องที่บันทึกไว้ แล้วกด <b>Import</b> ไฟล์นั้นในอีกเครื่อง
+</p>
+
+<div class="legend">
+  <span><span class="dot" style="background:var(--easy)"></span>Easy</span>
+  <span><span class="dot" style="background:var(--quality)"></span>Quality</span>
+  <span><span class="dot" style="background:var(--long)"></span>Long run</span>
+  <span><span class="dot" style="background:var(--cross)"></span>แบดมินตัน</span>
+  <span><span class="dot" style="background:#a16207"></span>Time trial</span>
+  <span><span class="dot" style="background:#0284c7"></span>Shakeout</span>
+  <span><span class="dot" style="background:var(--rest)"></span>พัก</span>
+  <span><span class="dot" style="background:var(--race)"></span>แข่งจริง</span>
+</div>
+
+<main id="main"></main>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <h2 id="sheetTitle"></h2>
+    <div class="meta" id="sheetMeta"></div>
+    <div class="detailbox" id="sheetDetail"></div>
+
+    <label>สถานะ</label>
+    <select id="fCompleted">
+      <option value="">— ยังไม่บันทึก —</option>
+      <option value="done">✅ ทำตามแผน</option>
+      <option value="partial">🟡 ทำบางส่วน / ปรับลด</option>
+      <option value="skipped">⏭️ ข้าม/ไม่ได้ทำ</option>
+    </select>
+
+    <div class="row2">
+      <div>
+        <label>ระยะจริง (กม.)</label>
+        <input type="number" step="0.1" id="fKm" placeholder="เช่น 5.2">
+      </div>
+      <div>
+        <label>เวลาที่ใช้ (นาที)</label>
+        <input type="number" step="1" id="fMin" placeholder="เช่น 42">
+      </div>
+    </div>
+    <div class="row2">
+      <div>
+        <label>HR เฉลี่ย (bpm)</label>
+        <input type="number" step="1" id="fHr" placeholder="เช่น 155">
+      </div>
+      <div>
+        <label>ความรู้สึก</label>
+        <select id="fFeel">
+          <option value="">-</option>
+          <option value="great">😄 ดีมาก เบาสบาย</option>
+          <option value="good">🙂 ดี ปกติ</option>
+          <option value="ok">😐 พอไหว</option>
+          <option value="tough">😣 หนัก/ล้า</option>
+          <option value="pain">🤕 มีอาการเจ็บ</option>
+        </select>
+      </div>
+    </div>
+    <label>บันทึกเพิ่มเติม</label>
+    <textarea id="fNotes" placeholder="เช่น อากาศร้อน, เข่าตึงนิดหน่อย, รู้สึกวิ่งง่ายกว่าที่คิด..."></textarea>
+
+    <div class="actions">
+      <button class="btn-close" onclick="closeSheet()">ปิด</button>
+      <button class="btn-save" onclick="saveLog()">บันทึกผล</button>
+    </div>
+    <div class="savedmsg" id="savedmsg">บันทึกแล้ว ✓</div>
+  </div>
+</div>
+
+<script>
+const PLAN = [
+  {date:"2026-07-16",week:0,type:"rest",title:"พักประจำสัปดาห์",detail:"วันพักตามตารางปกติ (พฤหัสฯ)",km:0},
+  {date:"2026-07-17",week:0,type:"easy",title:"Easy 4 กม.",detail:"วิ่งเบาๆ เพซ E (8:30–9:45/กม.) ผ่อนคลายกล้ามเนื้อหลังทดสอบ 5.2K เมื่อวันอาทิตย์ก่อน",km:4},
+  {date:"2026-07-18",week:0,type:"cross",title:"แบดมินตัน (เช้า)",detail:"Cross-training ตามปกติ ไม่ต้องวิ่งเพิ่ม",km:0},
+  {date:"2026-07-19",week:0,type:"rest",title:"พักประจำสัปดาห์",detail:"",km:0},
+
+  {date:"2026-07-20",week:1,type:"easy",title:"Easy 4 กม. + Strides",detail:"วิ่งเบา E pace 4 กม. จบด้วย Strides 4x20 วินาที (เร่งแบบควบคุมได้ ไม่ใช่วิ่งสปรินต์เต็มที่) คั่นด้วยเดิน/จ็อกกลับหายใจปกติ",km:4},
+  {date:"2026-07-21",week:1,type:"quality",title:"Tempo: 8 นาที @T",detail:"WU 1.5 กม. เพซ E + 8 นาที เพซ T (~7:20/กม.) + CD 1.5 กม. เพซ E",km:5},
+  {date:"2026-07-22",week:1,type:"easy",title:"Easy 4 กม. + แบดมินตัน (คืน)",detail:"วิ่งเบาตอนเช้า แล้วแบดมินตันตอนกลางคืนตามปกติ",km:4},
+  {date:"2026-07-23",week:1,type:"rest",title:"พักประจำสัปดาห์",detail:"",km:0},
+  {date:"2026-07-24",week:1,type:"long",title:"Long run 6 กม.",detail:"วิ่งยาวเพซ E ล้วนๆ ยังไม่มีท่อนเร่ง",km:6},
+  {date:"2026-07-25",week:1,type:"cross",title:"แบดมินตัน (เช้า)",detail:"Cross-training ตามปกติ",km:0},
+  {date:"2026-07-26",week:1,type:"rest",title:"พักประจำสัปดาห์",detail:"",km:0},
+
+  {date:"2026-07-27",week:2,type:"easy",title:"Easy 5 กม. + Strides",detail:"วิ่งเบา 5 กม. จบด้วย Strides 4x20 วินาที",km:5},
+  {date:"2026-07-28",week:2,type:"quality",title:"Tempo: 12 นาที @T",detail:"WU 1.5 กม. + 12 นาที เพซ T (~7:20/กม.) + CD 1.5 กม.",km:5},
+  {date:"2026-07-29",week:2,type:"easy",title:"Easy 5 กม. + แบดมินตัน (คืน)",detail:"วิ่งเบาตอนเช้า แล้วแบดมินตันตอนกลางคืน",km:5},
+  {date:"2026-07-30",week:2,type:"rest",title:"พักประจำสัปดาห์",detail:"",km:0},
+  {date:"2026-07-31",week:2,type:"long",title:"Long run 7 กม.",detail:"1 กม.สุดท้าย @ M pace (~7:55/กม.) ฝึกวิ่งเร็วขึ้นตอนขาเริ่มล้า",km:7},
+  {date:"2026-08-01",week:2,type:"cross",title:"แบดมินตัน (เช้า)",detail:"Cross-training ตามปกติ",km:0},
+  {date:"2026-08-02",week:2,type:"rest",title:"พักประจำสัปดาห์",detail:"",km:0},
+
+  {date:"2026-08-03",week:3,type:"easy",title:"Easy 5 กม. + Strides",detail:"วิ่งเบา 5 กม. จบด้วย Strides 4x20 วินาที",km:5},
+  {date:"2026-08-04",week:3,type:"quality",title:"Cruise intervals: 3x6 นาที @T",detail:"WU 1.5 กม. + 3x6 นาที เพซ T จ็อกฟื้นตัว 1 นาทีระหว่างเซ็ต + CD 1.5 กม.",km:6},
+  {date:"2026-08-05",week:3,type:"easy",title:"Easy 5 กม. + แบดมินตัน",detail:"วิ่งเบาตอนเช้า แล้วแบดมินตันตอนกลางคืน",km:5},
+  {date:"2026-08-06",week:3,type:"rest",title:"พักประจำสัปดาห์",detail:"",km:0},
+  {date:"2026-08-07",week:3,type:"long",title:"Long run 8 กม.",detail:"2 กม.สุดท้าย @ M pace",km:8},
+  {date:"2026-08-08",week:3,type:"cross",title:"แบดมินตัน (เช้า)",detail:"Cross-training ตามปกติ",km:0},
+  {date:"2026-08-09",week:3,type:"rest",title:"พักประจำสัปดาห์",detail:"",km:0},
+
+  {date:"2026-08-10",week:4,type:"easy",title:"Easy 4 กม.",detail:"สัปดาห์ผ่อน (cutback) — ลดปริมาณลงให้ร่างกายฟื้นตัว",km:4},
+  {date:"2026-08-11",week:4,type:"test",title:"🎯 Time Trial 5K",detail:"วิ่งจับเวลาเต็มที่ 5 กม. — ใช้ผลอัปเดต VDOT และปรับเพซซ้อมช่วงหลังของแผนให้แม่นยำขึ้น",km:6},
+  {date:"2026-08-12",week:4,type:"easy",title:"Easy 4 กม. เบาๆ + แบดมินตัน",detail:"วิ่งเบามากๆ เพื่อฟื้นตัวจาก time trial เมื่อวาน",km:4},
+  {date:"2026-08-13",week:4,type:"rest",title:"พักประจำสัปดาห์",detail:"",km:0},
+  {date:"2026-08-14",week:4,type:"long",title:"Long run 6 กม. เบาๆ",detail:"วิ่งยาวเบาๆ ไม่มีท่อนเร่ง (สัปดาห์ผ่อน)",km:6},
+  {date:"2026-08-15",week:4,type:"cross",title:"แบดมินตัน (เช้า)",detail:"Cross-training ตามปกติ",km:0},
+  {date:"2026-08-16",week:4,type:"rest",title:"พักประจำสัปดาห์",detail:"",km:0},
+
+  {date:"2026-08-17",week:5,type:"easy",title:"Easy 5 กม. + Strides",detail:"วิ่งเบา 5 กม. จบด้วย Strides 4x20 วินาที",km:5},
+  {date:"2026-08-18",week:5,type:"quality",title:"Intervals: 5x3 นาที @I",detail:"WU 2 กม. + 5x3 นาที เพซ I (~6:45/กม. หรือเพซใหม่หลัง time trial) จ็อกฟื้นตัว 2 นาที + CD 1.5 กม.",km:7},
+  {date:"2026-08-19",week:5,type:"easy",title:"Easy 5 กม. + แบดมินตัน",detail:"วิ่งเบาตอนเช้า แล้วแบดมินตันตอนกลางคืน",km:5},
+  {date:"2026-08-20",week:5,type:"rest",title:"พักประจำสัปดาห์",detail:"",km:0},
+  {date:"2026-08-21",week:5,type:"long",title:"🔝 Long run 9-10 กม. (ยาวที่สุดในแผน)",detail:"3 กม.สุดท้าย @ เพซเป้าหมาย 10K — จำลองความรู้สึกช่วงท้ายแข่งจริง",km:9.5},
+  {date:"2026-08-22",week:5,type:"cross",title:"แบดมินตัน (เช้า)",detail:"Cross-training ตามปกติ",km:0},
+  {date:"2026-08-23",week:5,type:"rest",title:"พักประจำสัปดาห์",detail:"",km:0},
+
+  {date:"2026-08-24",week:6,type:"easy",title:"Easy 5 กม.",detail:"วิ่งเบา 5 กม.",km:5},
+  {date:"2026-08-25",week:6,type:"quality",title:"Race-pace: 4x1.6 กม.",detail:"WU 2 กม. + 4x1.6 กม. @ เพซเป้าหมาย 10K จ็อกฟื้นตัว 2 นาที + CD 1 กม.",km:9},
+  {date:"2026-08-26",week:6,type:"easy",title:"Easy 4 กม. + แบดมินตัน (เบาลง)",detail:"วิ่งเบาตอนเช้า แบดมินตันคืนนี้ลดความเข้มลง",km:4},
+  {date:"2026-08-27",week:6,type:"rest",title:"พักประจำสัปดาห์",detail:"",km:0},
+  {date:"2026-08-28",week:6,type:"long",title:"Long run 7 กม. (เริ่ม taper)",detail:"2 กม. @ เพซเป้าหมาย 10K",km:7},
+  {date:"2026-08-29",week:6,type:"cross",title:"แบดมินตันเบาๆ",detail:"เล่นเบาลง หรืองดได้ถ้ารู้สึกล้า",km:0},
+  {date:"2026-08-30",week:6,type:"rest",title:"พักประจำสัปดาห์",detail:"",km:0},
+
+  {date:"2026-08-31",week:7,type:"easy",title:"Easy 4 กม. เบา",detail:"สัปดาห์แข่ง — เริ่ม taper อย่างจริงจัง",km:4},
+  {date:"2026-09-01",week:7,type:"quality",title:"Sharpen: 5x400m",detail:"WU 2 กม. + 5x400m เร็วกว่าปกตินิดหน่อย (I/R pace) จ็อกฟื้นตัวเท่าที่วิ่ง + CD 1 กม.",km:5},
+  {date:"2026-09-02",week:7,type:"easy",title:"Easy 3 กม. เบามาก",detail:"งดแบดมินตันคืนนี้ เพื่อเก็บแรงไว้ให้ขา",km:3},
+  {date:"2026-09-03",week:7,type:"rest",title:"พักประจำสัปดาห์",detail:"",km:0},
+  {date:"2026-09-04",week:7,type:"shakeout",title:"Shakeout 20 นาที + Strides",detail:"20 นาที เพซ E เบาๆ + 4 strides สั้นๆ ให้ขารู้สึกกระปรี้กระเปร่า",km:3},
+  {date:"2026-09-05",week:7,type:"rest",title:"พักเต็มที่ก่อนแข่ง",detail:"งดแบดมินตันเช้านี้ เตรียมอุปกรณ์ เช็คสภาพอากาศ นอนให้พอ",km:0},
+  {date:"2026-09-06",week:7,type:"race",title:"🏁 วันแข่ง — 10K!",detail:"เป้าหมาย ~65-68 นาที วอร์มอัพ 10-15 นาที คุมเพซช่วงต้นให้สบาย แล้วค่อยไล่ตามกลยุทธ์ที่วางไว้ในแผน",km:10},
+];
+
+const THAI_DOW = ["อา","จ","อ","พ","พฤ","ศ","ส"];
+const TYPE_LABEL = {easy:"Easy",quality:"Quality",long:"Long run",rest:"พัก",cross:"แบดมินตัน",test:"Time Trial",shakeout:"Shakeout",race:"แข่งจริง"};
+
+const STORAGE_KEY = "runPlan10k_logs_v1";
+let LOGS = {};
+try{
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw) LOGS = JSON.parse(raw);
+}catch(e){ console.warn("โหลดข้อมูลเดิมไม่สำเร็จ", e); }
+
+function todayStr(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+// ใช้วันที่ปัจจุบันจริงจากเครื่องผู้ใช้
+const TODAY = todayStr();
+
+function persist(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(LOGS)); }
+  catch(e){ alert("บันทึกลงเครื่องไม่สำเร็จ (พื้นที่เก็บข้อมูลอาจเต็ม หรือเบราว์เซอร์บล็อก) — แนะนำให้ Export ข้อมูลเก็บไว้เป็นไฟล์สำรอง"); }
+}
+
+function render(){
+  const main = document.getElementById("main");
+  main.innerHTML = "";
+  let weekNum = -1;
+  let weekDiv, grid;
+  PLAN.forEach(day=>{
+    if(day.week !== weekNum){
+      weekNum = day.week;
+      weekDiv = document.createElement("div");
+      weekDiv.className = "week";
+      weekDiv.id = "week-"+weekNum;
+      const h = document.createElement("div");
+      h.className = "week-title";
+      const wLabel = weekNum===0 ? "ช่วงเริ่มต้น" : "สัปดาห์ "+weekNum;
+      h.innerHTML = `<span>${wLabel}</span><span class="sub">${day.date.slice(5).replace('-','/')} ▸</span>`;
+      weekDiv.appendChild(h);
+      grid = document.createElement("div");
+      grid.className = "grid";
+      weekDiv.appendChild(grid);
+      main.appendChild(weekDiv);
+    }
+    const cell = document.createElement("div");
+    cell.className = "day type-"+day.type;
+    if(day.date === TODAY) cell.classList.add("today");
+    const dObj = new Date(day.date+"T00:00:00");
+    const dow = THAI_DOW[dObj.getDay()];
+    const dnum = day.date.slice(8,10);
+    const log = LOGS[day.date];
+    cell.innerHTML = `
+      <div class="dow">${dow} ${dnum}/${day.date.slice(5,7)}</div>
+      <span class="badge">${TYPE_LABEL[day.type]}</span>
+      <div class="title">${day.title}</div>
+      ${log && log.completed ? `<div class="check">✓</div>` : ""}
+    `;
+    cell.onclick = ()=>openSheet(day.date);
+    grid.appendChild(cell);
+  });
+  updateStats();
+}
+
+function updateStats(){
+  const race = new Date("2026-09-06T00:00:00");
+  const now = new Date(TODAY+"T00:00:00");
+  const diffDays = Math.round((race-now)/86400000);
+  document.getElementById("statDaysLeft").textContent = diffDays>=0? diffDays : "🏁";
+  const loggedDates = Object.keys(LOGS).filter(d=>LOGS[d] && LOGS[d].completed);
+  document.getElementById("statLogged").textContent = loggedDates.length;
+  let totalKm = 0;
+  loggedDates.forEach(d=>{ const v=parseFloat(LOGS[d].km); if(!isNaN(v)) totalKm += v; });
+  document.getElementById("statKm").textContent = totalKm.toFixed(1);
+}
+
+let currentDate = null;
+function openSheet(date){
+  currentDate = date;
+  const day = PLAN.find(d=>d.date===date);
+  document.getElementById("sheetTitle").textContent = day.title;
+  const dObj = new Date(date+"T00:00:00");
+  const dow = ["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์"][dObj.getDay()];
+  document.getElementById("sheetMeta").textContent = `วัน${dow}ที่ ${date.slice(8,10)}/${date.slice(5,7)}/${date.slice(0,4)} · ${TYPE_LABEL[day.type]}${day.km? " · ระยะตามแผน ~"+day.km+" กม." : ""}`;
+  document.getElementById("sheetDetail").textContent = day.detail || "-";
+
+  const log = LOGS[date] || {};
+  document.getElementById("fCompleted").value = log.completed || "";
+  document.getElementById("fKm").value = log.km || "";
+  document.getElementById("fMin").value = log.min || "";
+  document.getElementById("fHr").value = log.hr || "";
+  document.getElementById("fFeel").value = log.feel || "";
+  document.getElementById("fNotes").value = log.notes || "";
+  document.getElementById("savedmsg").style.display = "none";
+
+  document.getElementById("overlay").classList.add("open");
+}
+function closeSheet(){
+  document.getElementById("overlay").classList.remove("open");
+}
+function saveLog(){
+  if(!currentDate) return;
+  LOGS[currentDate] = {
+    completed: document.getElementById("fCompleted").value,
+    km: document.getElementById("fKm").value,
+    min: document.getElementById("fMin").value,
+    hr: document.getElementById("fHr").value,
+    feel: document.getElementById("fFeel").value,
+    notes: document.getElementById("fNotes").value,
+  };
+  persist();
+  document.getElementById("savedmsg").style.display = "block";
+  render();
+}
+
+function scrollToToday(){
+  let target = document.getElementById("week-"+ (PLAN.find(d=>d.date===TODAY)?.week ?? 0));
+  if(!target){
+    // หาสัปดาห์ที่ใกล้วันนี้ที่สุด
+    const closest = PLAN.reduce((a,b)=> Math.abs(new Date(b.date)-new Date(TODAY)) < Math.abs(new Date(a.date)-new Date(TODAY)) ? b : a);
+    target = document.getElementById("week-"+closest.week);
+  }
+  if(target) target.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function exportData(){
+  const blob = new Blob([JSON.stringify(LOGS, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "10k-training-log-"+TODAY+".json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function importData(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const parsed = JSON.parse(reader.result);
+      LOGS = Object.assign({}, LOGS, parsed);
+      persist();
+      render();
+      alert("นำเข้าข้อมูลสำเร็จ");
+    }catch(e){
+      alert("ไฟล์ไม่ถูกต้อง ไม่สามารถนำเข้าได้");
+    }
+  };
+  reader.readAsText(file);
+  evt.target.value = "";
+}
+
+render();
+setTimeout(scrollToToday, 100);
+</script>
+</body>
+</html>
