@@ -128,6 +128,8 @@
   .statusicon{position:absolute; top:4px; right:4px; width:21px; height:21px; border-radius:50%; background:#fff; font-size:12px; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.22); border:2px solid var(--done);}
   .statusicon.partial{border-color:#d97706;}
   .statusicon.skipped{border-color:#b91c1c; font-size:10px;}
+  .statusicon-group{position:absolute; top:4px; right:4px; display:flex; gap:2px;}
+  .statusicon-group .statusicon{position:static; width:17px; height:17px; font-size:9px;}
 
   .type-easy .badge{background:var(--easy-bg); color:var(--easy);}
   .type-quality .badge{background:var(--quality-bg); color:var(--quality);}
@@ -166,7 +168,22 @@
   .btn-save{background:var(--brand-600); color:#fff;}
   .btn-save:hover{background:var(--brand-700);}
   .btn-close{background:var(--rest-bg); color:var(--ink);}
-  .savedmsg{font-size:0.75rem; color:var(--done); margin-top:8px; display:none; font-weight:700;}
+
+  .actrow{border:1px solid var(--line); background:var(--brand-50); border-radius:10px; padding:9px; margin-top:8px;}
+  .actrow-top{display:flex; gap:8px; align-items:center;}
+  .actrow-top select{flex:1; margin:0;}
+  .actrow-top .actRemove{flex:0 0 auto; width:32px; height:36px; border:1px solid var(--line); background:#fff; border-radius:8px; cursor:pointer; color:var(--race); font-size:0.85rem;}
+  .actrow-fields{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;}
+  .actrow-fields input{margin:0;}
+  .addActivityBtn{width:100%; margin-top:8px; padding:9px; border:1px dashed var(--brand-400); background:var(--brand-50); color:var(--brand-700); border-radius:9px; font-size:0.8rem; font-weight:700; cursor:pointer;}
+  .addActivityBtn:hover{background:var(--brand-100);}
+
+  .toast{
+    position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:11px 20px; border-radius:30px; font-size:0.85rem; font-weight:700;
+    box-shadow:0 6px 20px rgba(0,0,0,0.25); opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; z-index:50;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
   /* glossary */
   .gsec{margin-bottom:22px;}
@@ -324,17 +341,10 @@
     </select>
 
     <label>กิจกรรมที่ทำจริง</label>
-    <select id="fActivity" onchange="onActivityChange()">
-      <option value="run">🏃 วิ่ง</option>
-      <option value="bike">🚴 ปั่นจักรยาน (ไม่ต้องบันทึกระยะ)</option>
-      <option value="badminton">🏸 แบดมินตัน (ไม่ต้องบันทึกระยะ)</option>
-    </select>
+    <div id="activityList"></div>
+    <button type="button" class="addActivityBtn" onclick="addActivityRow()">➕ เพิ่มกิจกรรม (ถ้าทำหลายอย่างในวันเดียว)</button>
 
-    <div class="row2">
-      <div id="kmFieldWrap"><label>ระยะจริง (กม.)</label><input type="number" step="0.1" id="fKm" placeholder="เช่น 5.2"></div>
-      <div><label>เวลาที่ใช้ (นาที)</label><input type="number" step="1" id="fMin" placeholder="เช่น 42"></div>
-    </div>
-    <div class="row2">
+    <div class="row2" style="margin-top:12px;">
       <div><label>HR เฉลี่ย (bpm)</label><input type="number" step="1" id="fHr" placeholder="เช่น 155"></div>
       <div>
         <label>ความรู้สึก</label>
@@ -355,9 +365,10 @@
       <button class="btn-close" onclick="closeSheet()">ปิด</button>
       <button class="btn-save" onclick="saveLog()">บันทึกผล</button>
     </div>
-    <div class="savedmsg" id="savedmsg">บันทึกแล้ว ✓</div>
   </div>
 </div>
+
+<div class="toast" id="savedToast">✅ บันทึกแล้ว</div>
 
 <div class="overlay" id="settingsOverlay">
   <div class="sheet settingsbox">
@@ -450,6 +461,15 @@ PLAN.forEach(d=>{ PLAN_BY_DATE[d.date] = d; });
 function defaultActivityFor(date){
   const day = PLAN_BY_DATE[date];
   return (day && day.type === "cross") ? "badminton" : "run";
+}
+
+// อ่านรายการกิจกรรมของ log วันนั้น — รองรับทั้งรูปแบบใหม่ (activities: [...])
+// และรูปแบบเดิมก่อนรองรับหลายกิจกรรม (activity เดี่ยว + km/min ที่ตัว log เอง)
+function getLogActivities(log, date){
+  if(!log) return [];
+  if(Array.isArray(log.activities)) return log.activities;
+  if(log.activity) return [{type: log.activity, km: log.km, min: log.min}];
+  return [];
 }
 
 const LOGS_KEY = "runPlan10k_logs_v1";
@@ -583,10 +603,15 @@ function render(){
       if(log.completed === "skipped"){
         statusHtml = `<div class="statusicon skipped" title="ข้าม/ไม่ได้ทำ">⏭️</div>`;
       } else {
-        const act = log.activity || defaultActivityFor(day.date);
         const cls = log.completed === "partial" ? "partial" : "done";
-        const label = ACTIVITY_LABEL[act] + (log.completed === "partial" ? " (บางส่วน)" : "");
-        statusHtml = `<div class="statusicon ${cls}" title="${label}">${ACTIVITY_ICON[act]}</div>`;
+        const suffix = log.completed === "partial" ? " (บางส่วน)" : "";
+        let acts = getLogActivities(log, day.date);
+        if(acts.length === 0) acts = [{type: defaultActivityFor(day.date)}];
+        const icons = acts.map(a=>{
+          const label = (ACTIVITY_LABEL[a.type] || a.type) + suffix;
+          return `<div class="statusicon ${cls}" title="${label}">${ACTIVITY_ICON[a.type] || "🏃"}</div>`;
+        }).join("");
+        statusHtml = acts.length > 1 ? `<div class="statusicon-group">${icons}</div>` : icons;
       }
     }
     cell.innerHTML = `
@@ -614,12 +639,15 @@ function updateStats(){
   loggedDates.forEach(d=>{
     const log = LOGS[d];
     if(log.completed === "skipped") return;
-    const act = log.activity || defaultActivityFor(d);
-    counts[act] = (counts[act]||0) + 1;
-    if(act === "run"){
-      const v = parseFloat(log.km);
-      if(!isNaN(v)) totalKm += v;
-    }
+    let acts = getLogActivities(log, d);
+    if(acts.length === 0) acts = [{type: defaultActivityFor(d), km: log.km}];
+    acts.forEach(a=>{
+      counts[a.type] = (counts[a.type]||0) + 1;
+      if(a.type === "run"){
+        const v = parseFloat(a.km);
+        if(!isNaN(v)) totalKm += v;
+      }
+    });
   });
 
   document.getElementById("ovRunKm").textContent = totalKm.toFixed(1);
@@ -678,12 +706,15 @@ function buildWeekChart(){
   Object.keys(LOGS).forEach(date=>{
     const log = LOGS[date];
     if(!log || !log.completed || log.completed === "skipped") return;
-    const act = log.activity || defaultActivityFor(date);
-    if(act !== "run") return;
     const day = PLAN_BY_DATE[date];
     if(!day) return;
-    const v = parseFloat(log.km);
-    if(!isNaN(v)) weeks[day.week] += v;
+    let acts = getLogActivities(log, date);
+    if(acts.length === 0) acts = [{type: defaultActivityFor(date), km: log.km}];
+    acts.forEach(a=>{
+      if(a.type !== "run") return;
+      const v = parseFloat(a.km);
+      if(!isNaN(v)) weeks[day.week] += v;
+    });
   });
   const weekNums = Object.keys(weeks).map(Number).sort((a,b)=>a-b);
   const maxKm = Math.max(1, ...weekNums.map(w=>weeks[w]));
@@ -715,40 +746,90 @@ function openSheet(date){
 
   const log = LOGS[date] || {};
   document.getElementById("fCompleted").value = log.completed || "";
-  document.getElementById("fActivity").value = log.activity || defaultActivityFor(date);
-  document.getElementById("fKm").value = log.km || "";
-  document.getElementById("fMin").value = log.min || "";
+  const acts = getLogActivities(log, date);
+  renderActivityRows(acts.length ? acts : [{type: defaultActivityFor(date), km:"", min:""}]);
   document.getElementById("fHr").value = log.hr || "";
   document.getElementById("fFeel").value = log.feel || "";
   document.getElementById("fNotes").value = log.notes || "";
-  document.getElementById("savedmsg").style.display = "none";
-  onActivityChange();
 
   document.getElementById("overlay").classList.add("open");
 }
 function closeSheet(){ document.getElementById("overlay").classList.remove("open"); }
 
-function onActivityChange(){
-  const act = document.getElementById("fActivity").value;
-  document.getElementById("kmFieldWrap").style.display = act === "run" ? "" : "none";
+/* ---------- กิจกรรมหลายรายการต่อวัน ---------- */
+function renderActivityRows(list){
+  const wrap = document.getElementById("activityList");
+  wrap.innerHTML = "";
+  list.forEach(item=>addActivityRow(item));
+}
+
+function addActivityRow(item){
+  const wrap = document.getElementById("activityList");
+  if(!item){
+    const used = Array.from(wrap.querySelectorAll(".actType")).map(s=>s.value);
+    const prefer = ["badminton","bike","run"].find(t=>!used.includes(t));
+    item = {type: prefer || "run", km:"", min:""};
+  }
+  const row = document.createElement("div");
+  row.className = "actrow";
+  row.innerHTML = `
+    <div class="actrow-top">
+      <select class="actType" onchange="onActivityTypeChange(this)">
+        <option value="run">🏃 วิ่ง</option>
+        <option value="bike">🚴 ปั่นจักรยาน (ไม่ต้องบันทึกระยะ)</option>
+        <option value="badminton">🏸 แบดมินตัน (ไม่ต้องบันทึกระยะ)</option>
+      </select>
+      <button type="button" class="actRemove" onclick="this.closest('.actrow').remove()" title="ลบกิจกรรมนี้">✕</button>
+    </div>
+    <div class="actrow-fields">
+      <input type="number" step="0.1" class="actKm" placeholder="ระยะ (กม.)">
+      <input type="number" step="1" class="actMin" placeholder="เวลา (นาที)">
+    </div>
+  `;
+  wrap.appendChild(row);
+  row.querySelector(".actType").value = item.type || "run";
+  row.querySelector(".actKm").value = item.km || "";
+  row.querySelector(".actMin").value = item.min || "";
+  onActivityTypeChange(row.querySelector(".actType"));
+}
+
+function onActivityTypeChange(select){
+  const row = select.closest(".actrow");
+  const kmInput = row.querySelector(".actKm");
+  const isRun = select.value === "run";
+  kmInput.style.display = isRun ? "" : "none";
+  if(!isRun) kmInput.value = "";
+}
+
+function collectActivities(){
+  return Array.from(document.querySelectorAll("#activityList .actrow")).map(row=>{
+    const type = row.querySelector(".actType").value;
+    const km = row.querySelector(".actKm").value;
+    const min = row.querySelector(".actMin").value;
+    return {type, km: type==="run" ? km : "", min};
+  });
+}
+
+function showSavedToast(){
+  const toast = document.getElementById("savedToast");
+  toast.classList.add("show");
+  setTimeout(()=>toast.classList.remove("show"), 1800);
 }
 
 async function saveLog(){
   if(!currentDate) return;
-  const activity = document.getElementById("fActivity").value;
   LOGS[currentDate] = {
     completed: document.getElementById("fCompleted").value,
-    activity: activity,
-    km: activity === "run" ? document.getElementById("fKm").value : "",
-    min: document.getElementById("fMin").value,
+    activities: collectActivities(),
     hr: document.getElementById("fHr").value,
     feel: document.getElementById("fFeel").value,
     notes: document.getElementById("fNotes").value,
   };
   persistLocal();
-  document.getElementById("savedmsg").style.display = "block";
   render();
-  await ghSave();
+  showSavedToast();
+  ghSave();
+  setTimeout(closeSheet, 700);
 }
 
 function scrollToToday(){
