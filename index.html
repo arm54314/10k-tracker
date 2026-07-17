@@ -237,6 +237,50 @@
   .statusmsg{font-size:0.78rem; margin-top:12px; padding:10px 12px; border-radius:12px; display:none; font-weight:600;}
   .statusmsg.ok{display:block; background:var(--cross-bg); color:var(--cross);}
   .statusmsg.err{display:block; background:var(--race-bg); color:var(--race);}
+
+  /* report */
+  .rep-progress-card{background:var(--card); border:1px solid rgba(11,31,28,.06); border-radius:var(--r-card); padding:20px; box-shadow:var(--shadow-1); margin-bottom:16px;}
+  .rep-progress-head{display:flex; justify-content:space-between; align-items:baseline; font-size:0.82rem; font-weight:700; color:var(--sub); margin-bottom:12px;}
+  .rep-progress-head span:last-child{font-size:1.4rem; font-weight:800; color:var(--brand-700);}
+  .rep-progress-track{width:100%; height:16px; background:var(--surface-2); border-radius:999px; overflow:hidden;}
+  .rep-progress-fill{height:100%; width:0%; background:linear-gradient(90deg,var(--brand-400),var(--brand-700)); border-radius:999px; transition:width .6s ease;}
+  .rep-progress-sub{font-size:0.76rem; color:var(--sub); margin-top:10px;}
+
+  .rep-stats-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(148px,1fr)); gap:12px; margin-bottom:16px;}
+  .rep-stat{background:var(--card); border:1px solid rgba(11,31,28,.06); border-radius:16px; padding:16px; box-shadow:var(--shadow-1);}
+  .rep-stat .lbl{font-size:0.72rem; color:var(--sub); font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:6px;}
+  .rep-stat .val{font-size:1.45rem; font-weight:800; color:var(--ink); letter-spacing:-0.02em;}
+  .rep-stat .val .unit{font-size:0.72rem; font-weight:600; color:var(--sub); margin-left:3px;}
+
+  .rep-row{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;}
+  @media (max-width:640px){ .rep-row{grid-template-columns:1fr;} }
+  .rep-card{background:var(--card); border:1px solid rgba(11,31,28,.06); border-radius:var(--r-card); padding:18px; box-shadow:var(--shadow-1); margin-bottom:16px;}
+  .rep-row .rep-card{margin-bottom:0;}
+  .rep-card-title{font-size:0.85rem; font-weight:800; color:var(--brand-700); margin-bottom:14px;}
+
+  .rep-weekchart{display:flex; align-items:flex-end; gap:5px; height:150px; padding-top:16px; overflow-x:auto;}
+  .rep-weekchart .wk{flex:1 0 22px; display:flex; flex-direction:column; align-items:center; gap:6px; justify-content:flex-end; height:100%; position:relative;}
+  .rep-weekchart .bar{width:100%; max-width:22px; background:var(--brand-100); border-radius:6px 6px 2px 2px; transition:height .3s ease; position:relative;}
+  .rep-weekchart .bar.hasval{background:var(--brand-400);}
+  .rep-weekchart .bar.isnow{background:var(--brand-700);}
+  .rep-weekchart .barval{position:absolute; top:-16px; left:50%; transform:translateX(-50%); font-size:0.54rem; font-weight:700; color:var(--sub); white-space:nowrap;}
+  .rep-weekchart .wklbl{font-size:0.58rem; color:var(--sub); font-weight:600;}
+
+  .rep-cumsvg{width:100%; height:150px; display:block;}
+  .rep-cum-legend{display:flex; gap:16px; margin-top:10px; font-size:0.78rem; color:var(--sub);}
+  .rep-cum-legend .sw{display:inline-block; width:16px; height:3px; border-radius:2px; margin-right:6px; vertical-align:middle;}
+  .rep-cum-legend .sw.plan{background:var(--brand-200);}
+  .rep-cum-legend .sw.actual{background:var(--brand-700);}
+
+  .replog{display:flex; flex-direction:column; gap:10px; max-height:640px; overflow-y:auto;}
+  .replog-row{border:1px solid var(--line); border-radius:14px; padding:12px 14px; background:var(--surface-3);}
+  .replog-top{display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap;}
+  .replog-date{font-size:0.8rem; font-weight:800; color:var(--ink);}
+  .replog-week{font-size:0.7rem; color:var(--sub);}
+  .replog-acts{font-size:0.82rem; color:var(--ink); line-height:1.6;}
+  .replog-feel{font-size:0.76rem; color:var(--sub); margin-top:4px;}
+  .replog-notes{font-size:0.78rem; color:var(--sub); margin-top:4px; font-style:italic; line-height:1.5;}
+  .replog-empty{text-align:center; color:var(--sub); font-size:0.85rem; padding:30px 10px;}
 </style>
 </head>
 <body>
@@ -286,6 +330,7 @@
 <nav class="tabs">
   <div class="tabtrack">
     <button id="tabPlanBtn" class="active" onclick="showView('plan')">📅 แผนซ้อม</button>
+    <button id="tabReportBtn" onclick="showView('report')">📊 Report</button>
     <button id="tabGlossaryBtn" onclick="showView('glossary')">📖 คำศัพท์</button>
   </div>
 </nav>
@@ -319,6 +364,50 @@
 
 <main>
   <section id="viewPlan" class="view active"></section>
+
+  <section id="viewReport" class="view">
+    <div class="rep-progress-card">
+      <div class="rep-progress-head">
+        <span>ความคืบหน้าสู่วันแข่ง (6 ก.ย. 2026)</span>
+        <span id="repProgressPct">0%</span>
+      </div>
+      <div class="rep-progress-track">
+        <div class="rep-progress-fill" id="repProgressFill"></div>
+      </div>
+      <div class="rep-progress-sub" id="repProgressSub"></div>
+    </div>
+
+    <div class="rep-stats-grid" id="repStatsGrid"></div>
+
+    <div class="rep-row">
+      <div class="rep-card">
+        <div class="rep-card-title">📊 สัดส่วนกิจกรรมทั้งหมด</div>
+        <div class="donutwrap" style="width:150px;height:150px;">
+          <svg viewBox="0 0 100 100" class="donut" id="repDonutSvg"></svg>
+          <div class="donut-center" id="repDonutCenter"></div>
+        </div>
+        <div class="ov-legend" id="repLegend"></div>
+      </div>
+      <div class="rep-card">
+        <div class="rep-card-title">📈 ระยะวิ่งรายสัปดาห์ (กม.)</div>
+        <div class="rep-weekchart" id="repWeekChart"></div>
+      </div>
+    </div>
+
+    <div class="rep-card">
+      <div class="rep-card-title">🎯 ระยะสะสม: แผน vs จริง</div>
+      <svg viewBox="0 0 100 40" class="rep-cumsvg" id="repCumSvg" preserveAspectRatio="none"></svg>
+      <div class="rep-cum-legend">
+        <span><span class="sw plan"></span><span id="repCumLegendPlan">แผน: 0 กม.</span></span>
+        <span><span class="sw actual"></span><span id="repCumLegendActual">จริง: 0 กม.</span></span>
+      </div>
+    </div>
+
+    <div class="rep-card">
+      <div class="rep-card-title">📝 ประวัติกิจกรรมทั้งหมด</div>
+      <div class="replog" id="repLogList"></div>
+    </div>
+  </section>
 
   <section id="viewGlossary" class="view">
     <div class="gsec">
@@ -509,6 +598,35 @@ function defaultActivityFor(date){
   return (day && day.type === "cross") ? "badminton" : "run";
 }
 
+const FEEL_SCORE = {great:5, good:4, ok:3, tough:2, pain:1};
+const FEEL_INFO = {
+  great:{emoji:"😄", label:"ดีมาก เบาสบาย"},
+  good:{emoji:"🙂", label:"ดี ปกติ"},
+  ok:{emoji:"😐", label:"พอไหว"},
+  tough:{emoji:"😣", label:"หนัก/ล้า"},
+  pain:{emoji:"🤕", label:"มีอาการเจ็บ"},
+};
+function nearestFeel(score){
+  let best = null, bestDiff = Infinity;
+  Object.keys(FEEL_SCORE).forEach(k=>{
+    const d = Math.abs(FEEL_SCORE[k]-score);
+    if(d < bestDiff){ bestDiff = d; best = k; }
+  });
+  return best;
+}
+
+// คำนวณความคืบหน้าของแผนซ้อม (จากวันเริ่มแผนถึงวันแข่ง) — ใช้ร่วมกันทั้งวงแหวนใน header และหลอด progress ในหน้า report
+function computeProgress(){
+  const race = new Date("2026-09-06T00:00:00");
+  const now = new Date(TODAY+"T00:00:00");
+  const diffDays = Math.round((race-now)/86400000);
+  const planStart = new Date(PLAN[0].date+"T00:00:00");
+  const totalProgramDays = Math.max(1, Math.round((race-planStart)/86400000));
+  const elapsedDays = Math.min(totalProgramDays, Math.max(0, totalProgramDays - Math.max(0, diffDays)));
+  const pct = elapsedDays / totalProgramDays;
+  return {diffDays, totalProgramDays, elapsedDays, pct};
+}
+
 // อ่านรายการกิจกรรมของ log วันนั้น — รองรับทั้งรูปแบบใหม่ (activities: [...])
 // และรูปแบบเดิมก่อนรองรับหลายกิจกรรม (activity เดี่ยว + km/min ที่ตัว log เอง)
 function getLogActivities(log, date){
@@ -615,8 +733,10 @@ async function syncNow(){
 /* ---------- Views / tabs ---------- */
 function showView(name){
   document.getElementById("viewPlan").classList.toggle("active", name==="plan");
+  document.getElementById("viewReport").classList.toggle("active", name==="report");
   document.getElementById("viewGlossary").classList.toggle("active", name==="glossary");
   document.getElementById("tabPlanBtn").classList.toggle("active", name==="plan");
+  document.getElementById("tabReportBtn").classList.toggle("active", name==="report");
   document.getElementById("tabGlossaryBtn").classList.toggle("active", name==="glossary");
   document.getElementById("planToolbar").style.display = name==="plan" ? "flex" : "none";
   document.getElementById("planLegend").style.display = name==="plan" ? "flex" : "none";
@@ -680,21 +800,15 @@ function render(){
 }
 
 function updateStats(){
-  const race = new Date("2026-09-06T00:00:00");
-  const now = new Date(TODAY+"T00:00:00");
-  const diffDays = Math.round((race-now)/86400000);
-  document.getElementById("statDaysLeft").textContent = diffDays>=0? diffDays : "🏁";
+  const prog = computeProgress();
+  document.getElementById("statDaysLeft").textContent = prog.diffDays>=0? prog.diffDays : "🏁";
 
   // อัพเดทวงแหวนความคืบหน้าของแผนซ้อม (จากวันเริ่มแผนถึงวันแข่ง)
-  const planStart = new Date(PLAN[0].date+"T00:00:00");
-  const totalProgramDays = Math.max(1, Math.round((race-planStart)/86400000));
-  const elapsedDays = Math.min(totalProgramDays, Math.max(0, totalProgramDays - Math.max(0, diffDays)));
-  const progressPct = elapsedDays / totalProgramDays;
   const ring = document.getElementById("raceRing");
   if(ring){
     const rr = 42, cc = 2*Math.PI*rr;
     ring.style.strokeDasharray = cc.toFixed(2);
-    ring.style.strokeDashoffset = (cc*(1-progressPct)).toFixed(2);
+    ring.style.strokeDashoffset = (cc*(1-prog.pct)).toFixed(2);
   }
 
   const loggedDates = Object.keys(LOGS).filter(d=>LOGS[d] && LOGS[d].completed);
@@ -722,13 +836,16 @@ function updateStats(){
 
   buildDonut(counts);
   buildWeekChart();
+  buildReport();
 }
 
-function buildDonut(counts){
+function buildDonut(counts, svgId, centerId, legendId){
+  svgId = svgId || "donutSvg"; centerId = centerId || "donutCenter"; legendId = legendId || "ovLegend";
   const total = counts.run + counts.bike + counts.badminton;
-  const svg = document.getElementById("donutSvg");
-  const center = document.getElementById("donutCenter");
-  const legend = document.getElementById("ovLegend");
+  const svg = document.getElementById(svgId);
+  const center = document.getElementById(centerId);
+  const legend = document.getElementById(legendId);
+  if(!svg || !center || !legend) return;
   const r = 40, c = 2*Math.PI*r;
 
   if(total === 0){
@@ -765,7 +882,10 @@ function buildDonut(counts){
     </div>`).join("");
 }
 
-function buildWeekChart(){
+function buildWeekChart(targetId, showValues){
+  targetId = targetId || "weekChart";
+  const el = document.getElementById(targetId);
+  if(!el) return;
   const weeks = {};
   PLAN.forEach(d=>{ if(!(d.week in weeks)) weeks[d.week] = 0; });
   Object.keys(LOGS).forEach(date=>{
@@ -784,19 +904,178 @@ function buildWeekChart(){
   const weekNums = Object.keys(weeks).map(Number).sort((a,b)=>a-b);
   const maxKm = Math.max(1, ...weekNums.map(w=>weeks[w]));
   const currentWeek = (PLAN_BY_DATE[TODAY] || {}).week;
-  const el = document.getElementById("weekChart");
+  const maxH = showValues ? 120 : 56;
   el.innerHTML = weekNums.map(w=>{
     const km = weeks[w];
-    const h = Math.max(3, Math.round((km/maxKm)*56));
+    const h = Math.max(3, Math.round((km/maxKm)*maxH));
     const label = w===0 ? "เริ่ม" : "S"+w;
     const cls = ["bar"];
     if(km>0) cls.push("hasval");
     if(w===currentWeek) cls.push("isnow");
+    const valHtml = showValues ? `<div class="barval">${km>0?km.toFixed(1):""}</div>` : "";
     return `<div class="wk" title="${w===0?'ช่วงเริ่มต้น':'สัปดาห์ '+w}: ${km.toFixed(1)} กม.">
+      ${valHtml}
       <div class="${cls.join(' ')}" style="height:${h}px"></div>
       <div class="wklbl">${label}</div>
     </div>`;
   }).join("");
+}
+
+/* ---------- หน้า Report ---------- */
+function buildCumulativeChart(){
+  const svg = document.getElementById("repCumSvg");
+  if(!svg) return;
+  const days = PLAN;
+  const n = days.length;
+  let planCum = 0, actualCum = 0;
+  const planPts = [], actualPts = [];
+  days.forEach(d=>{
+    planCum += (d.km || 0);
+    const log = LOGS[d.date];
+    let dayActualKm = 0;
+    if(log && log.completed && log.completed !== "skipped"){
+      let acts = getLogActivities(log, d.date);
+      acts.forEach(a=>{
+        if(a.type === "run"){
+          const v = parseFloat(a.km);
+          if(!isNaN(v)) dayActualKm += v;
+        }
+      });
+    }
+    actualCum += dayActualKm;
+    planPts.push(planCum);
+    actualPts.push(actualCum);
+  });
+  const maxY = Math.max(1, planCum, actualCum);
+  const w = 100, h = 40, padY = 2;
+  const toPath = (arr)=> arr.map((v,i)=>{
+    const x = n>1 ? (i/(n-1))*w : 0;
+    const y = h - padY - (v/maxY)*(h-padY*2);
+    return (i===0?"M":"L") + x.toFixed(2) + "," + y.toFixed(2);
+  }).join(" ");
+  svg.innerHTML = `
+    <path d="${toPath(planPts)}" fill="none" stroke="var(--brand-200)" stroke-width="1" stroke-dasharray="2,1.4" vector-effect="non-scaling-stroke"/>
+    <path d="${toPath(actualPts)}" fill="none" stroke="var(--brand-700)" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+  `;
+  const planLbl = document.getElementById("repCumLegendPlan");
+  const actualLbl = document.getElementById("repCumLegendActual");
+  if(planLbl) planLbl.textContent = "แผน: " + planCum.toFixed(1) + " กม.";
+  if(actualLbl) actualLbl.textContent = "จริง: " + actualCum.toFixed(1) + " กม.";
+}
+
+function buildReport(){
+  const repView = document.getElementById("viewReport");
+  if(!repView) return;
+
+  // ----- หลอด progress ความคืบหน้าสู่วันแข่ง -----
+  const prog = computeProgress();
+  const pctInt = Math.round(prog.pct*100);
+  const pctEl = document.getElementById("repProgressPct");
+  const fillEl = document.getElementById("repProgressFill");
+  const subEl = document.getElementById("repProgressSub");
+  if(pctEl) pctEl.textContent = pctInt + "%";
+  if(fillEl) fillEl.style.width = pctInt + "%";
+  if(subEl){
+    subEl.textContent = `ผ่านมาแล้ว ${prog.elapsedDays} วัน จากทั้งหมด ${prog.totalProgramDays} วัน` +
+      (prog.diffDays>=0 ? ` · เหลืออีก ${prog.diffDays} วันถึงวันแข่ง` : " · ถึงวันแข่งแล้ว 🏁");
+  }
+
+  // ----- รวบรวมสถิติจาก LOGS -----
+  const loggedDates = Object.keys(LOGS).filter(d=>LOGS[d] && LOGS[d].completed).sort();
+  const doneOrPartial = loggedDates.filter(d=>LOGS[d].completed !== "skipped");
+  const skippedCount = loggedDates.length - doneOrPartial.length;
+  const counts = {run:0, bike:0, badminton:0};
+  let totalKm = 0;
+  const feelScores = [];
+  const hrValues = [];
+  doneOrPartial.forEach(d=>{
+    const log = LOGS[d];
+    let acts = getLogActivities(log, d);
+    if(acts.length === 0) acts = [{type: defaultActivityFor(d), km: log.km, hr: log.hr}];
+    acts.forEach(a=>{
+      counts[a.type] = (counts[a.type]||0) + 1;
+      if(a.type === "run"){
+        const v = parseFloat(a.km);
+        if(!isNaN(v)) totalKm += v;
+      }
+      const hrv = parseFloat(a.hr);
+      if(!isNaN(hrv)) hrValues.push(hrv);
+    });
+    if(log.feel && FEEL_SCORE[log.feel]) feelScores.push(FEEL_SCORE[log.feel]);
+  });
+  const successDenom = doneOrPartial.length + skippedCount;
+  const successRate = successDenom>0 ? Math.round(doneOrPartial.length/successDenom*100) : null;
+  const avgFeelKey = feelScores.length ? nearestFeel(feelScores.reduce((a,b)=>a+b,0)/feelScores.length) : null;
+  const avgHr = hrValues.length ? Math.round(hrValues.reduce((a,b)=>a+b,0)/hrValues.length) : null;
+
+  // ----- การ์ดสถิติ -----
+  const statsGrid = document.getElementById("repStatsGrid");
+  if(statsGrid){
+    const stats = [
+      {icon:"🏃", lbl:"ระยะวิ่งสะสม", val:totalKm.toFixed(1), unit:"กม."},
+      {icon:"✅", lbl:"บันทึกผลแล้ว", val:loggedDates.length, unit:"/ "+PLAN.length+" วัน"},
+      {icon:"📈", lbl:"อัตราสำเร็จ", val: successRate!==null ? successRate : "-", unit: successRate!==null ? "%" : ""},
+      {icon:"⏭️", lbl:"ข้ามไป", val:skippedCount, unit:"วัน"},
+      {icon: avgFeelKey ? FEEL_INFO[avgFeelKey].emoji : "😐", lbl:"ความรู้สึกเฉลี่ย", val: avgFeelKey ? FEEL_INFO[avgFeelKey].label : "-", unit:""},
+      {icon:"❤️", lbl:"HR เฉลี่ย", val: avgHr!==null ? avgHr : "-", unit: avgHr!==null ? "bpm" : ""},
+    ];
+    statsGrid.innerHTML = stats.map(s=>`
+      <div class="rep-stat">
+        <div class="lbl"><span>${s.icon}</span><span>${s.lbl}</span></div>
+        <div class="val">${s.val}<span class="unit">${s.unit ? (" "+s.unit) : ""}</span></div>
+      </div>`).join("");
+  }
+
+  // ----- pie chart + กราฟรายสัปดาห์ (เวอร์ชันเต็มของหน้า overview) -----
+  buildDonut(counts, "repDonutSvg", "repDonutCenter", "repLegend");
+  buildWeekChart("repWeekChart", true);
+  buildCumulativeChart();
+
+  // ----- ประวัติกิจกรรมแบบละเอียด -----
+  const listEl = document.getElementById("repLogList");
+  if(listEl){
+    if(loggedDates.length === 0){
+      listEl.innerHTML = `<div class="replog-empty">ยังไม่มีการบันทึกผล — เริ่มบันทึกได้จากหน้า "แผนซ้อม"</div>`;
+    } else {
+      listEl.innerHTML = loggedDates.slice().reverse().map(d=>{
+        const log = LOGS[d];
+        const day = PLAN_BY_DATE[d];
+        const dObj = new Date(d+"T00:00:00");
+        const dow = THAI_DOW[dObj.getDay()];
+        const dstr = d.slice(8,10)+"/"+d.slice(5,7)+"/"+d.slice(0,4);
+        let body;
+        if(log.completed === "skipped"){
+          body = `<div class="replog-acts">⏭️ ข้าม/ไม่ได้ทำ</div>`;
+        } else {
+          let acts = getLogActivities(log, d);
+          if(acts.length === 0) acts = [{type: defaultActivityFor(d)}];
+          const suffix = log.completed === "partial" ? " (บางส่วน)" : "";
+          const parts = acts.map(a=>{
+            const icon = ACTIVITY_ICON[a.type] || "🏃";
+            const label = ACTIVITY_LABEL[a.type] || a.type;
+            const bits = [];
+            if(a.type === "run" && a.km) bits.push(a.km+" กม.");
+            if(a.min) bits.push(a.min+" นาที");
+            if(a.hr) bits.push("HR "+a.hr);
+            return `${icon} ${label}${bits.length ? " · "+bits.join(" · ") : ""}`;
+          });
+          body = `<div class="replog-acts">${parts.join("<br>")}${suffix}</div>`;
+        }
+        const feelHtml = log.feel && FEEL_INFO[log.feel] ? `<div class="replog-feel">${FEEL_INFO[log.feel].emoji} ${FEEL_INFO[log.feel].label}</div>` : "";
+        const notesHtml = log.notes ? `<div class="replog-notes">"${log.notes}"</div>` : "";
+        return `
+          <div class="replog-row">
+            <div class="replog-top">
+              <span class="replog-date">${dow} ${dstr}</span>
+              <span class="replog-week">${day ? day.title : ""}</span>
+            </div>
+            ${body}
+            ${feelHtml}
+            ${notesHtml}
+          </div>`;
+      }).join("");
+    }
+  }
 }
 
 let currentDate = null;
@@ -935,7 +1214,7 @@ function importData(evt){
 /* ---------- init ---------- */
 (async function init(){
   render();
-  const startView = location.hash === "#glossary" ? "glossary" : "plan";
+  const startView = location.hash === "#glossary" ? "glossary" : (location.hash === "#report" ? "report" : "plan");
   showView(startView);
   setTimeout(scrollToToday, 100);
   const res = await ghLoad(false);
