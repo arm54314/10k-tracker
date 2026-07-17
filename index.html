@@ -173,8 +173,8 @@
   .actrow-top{display:flex; gap:8px; align-items:center;}
   .actrow-top select{flex:1; margin:0;}
   .actrow-top .actRemove{flex:0 0 auto; width:32px; height:36px; border:1px solid var(--line); background:#fff; border-radius:8px; cursor:pointer; color:var(--race); font-size:0.85rem;}
-  .actrow-fields{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;}
-  .actrow-fields input{margin:0;}
+  .actrow-fields{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;}
+  .actrow-fields input{margin:0; flex:1 1 90px; min-width:90px;}
   .addActivityBtn{width:100%; margin-top:8px; padding:9px; border:1px dashed var(--brand-400); background:var(--brand-50); color:var(--brand-700); border-radius:9px; font-size:0.8rem; font-weight:700; cursor:pointer;}
   .addActivityBtn:hover{background:var(--brand-100);}
 
@@ -344,10 +344,9 @@
     <div id="activityList"></div>
     <button type="button" class="addActivityBtn" onclick="addActivityRow()">➕ เพิ่มกิจกรรม (ถ้าทำหลายอย่างในวันเดียว)</button>
 
-    <div class="row2" style="margin-top:12px;">
-      <div><label>HR เฉลี่ย (bpm)</label><input type="number" step="1" id="fHr" placeholder="เช่น 155"></div>
+    <div style="margin-top:12px;">
       <div>
-        <label>ความรู้สึก</label>
+        <label>ความรู้สึกโดยรวม</label>
         <select id="fFeel">
           <option value="">-</option>
           <option value="great">😄 ดีมาก เบาสบาย</option>
@@ -467,8 +466,14 @@ function defaultActivityFor(date){
 // และรูปแบบเดิมก่อนรองรับหลายกิจกรรม (activity เดี่ยว + km/min ที่ตัว log เอง)
 function getLogActivities(log, date){
   if(!log) return [];
-  if(Array.isArray(log.activities)) return log.activities;
-  if(log.activity) return [{type: log.activity, km: log.km, min: log.min}];
+  if(Array.isArray(log.activities)){
+    // ย้ายค่า HR รวมของวัน (บันทึกไว้แบบเก่า) มาใส่กิจกรรมแรก ถ้ากิจกรรมนั้นยังไม่มี HR ของตัวเอง
+    if(log.hr && log.activities.length && !log.activities[0].hr){
+      return log.activities.map((a,i)=> i===0 ? {...a, hr: log.hr} : a);
+    }
+    return log.activities;
+  }
+  if(log.activity) return [{type: log.activity, km: log.km, min: log.min, hr: log.hr}];
   return [];
 }
 
@@ -747,8 +752,7 @@ function openSheet(date){
   const log = LOGS[date] || {};
   document.getElementById("fCompleted").value = log.completed || "";
   const acts = getLogActivities(log, date);
-  renderActivityRows(acts.length ? acts : [{type: defaultActivityFor(date), km:"", min:""}]);
-  document.getElementById("fHr").value = log.hr || "";
+  renderActivityRows(acts.length ? acts : [{type: defaultActivityFor(date), km:"", min:"", hr:""}]);
   document.getElementById("fFeel").value = log.feel || "";
   document.getElementById("fNotes").value = log.notes || "";
 
@@ -768,7 +772,7 @@ function addActivityRow(item){
   if(!item){
     const used = Array.from(wrap.querySelectorAll(".actType")).map(s=>s.value);
     const prefer = ["badminton","bike","run"].find(t=>!used.includes(t));
-    item = {type: prefer || "run", km:"", min:""};
+    item = {type: prefer || "run", km:"", min:"", hr:""};
   }
   const row = document.createElement("div");
   row.className = "actrow";
@@ -784,12 +788,14 @@ function addActivityRow(item){
     <div class="actrow-fields">
       <input type="number" step="0.1" class="actKm" placeholder="ระยะ (กม.)">
       <input type="number" step="1" class="actMin" placeholder="เวลา (นาที)">
+      <input type="number" step="1" class="actHr" placeholder="HR (bpm)">
     </div>
   `;
   wrap.appendChild(row);
   row.querySelector(".actType").value = item.type || "run";
   row.querySelector(".actKm").value = item.km || "";
   row.querySelector(".actMin").value = item.min || "";
+  row.querySelector(".actHr").value = item.hr || "";
   onActivityTypeChange(row.querySelector(".actType"));
 }
 
@@ -806,7 +812,8 @@ function collectActivities(){
     const type = row.querySelector(".actType").value;
     const km = row.querySelector(".actKm").value;
     const min = row.querySelector(".actMin").value;
-    return {type, km: type==="run" ? km : "", min};
+    const hr = row.querySelector(".actHr").value;
+    return {type, km: type==="run" ? km : "", min, hr};
   });
 }
 
@@ -821,7 +828,6 @@ async function saveLog(){
   LOGS[currentDate] = {
     completed: document.getElementById("fCompleted").value,
     activities: collectActivities(),
-    hr: document.getElementById("fHr").value,
     feel: document.getElementById("fFeel").value,
     notes: document.getElementById("fNotes").value,
   };
