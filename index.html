@@ -20,6 +20,8 @@
     --race:#c8322f; --race-bg:#fbe7e6;
 
     --done:#0f9d73;
+
+    --act-run:var(--brand-600); --act-bike:#eda100; --act-badminton:#64748b;
   }
   *{box-sizing:border-box;}
   body{
@@ -37,20 +39,49 @@
     background:radial-gradient(circle,rgba(255,255,255,0.14),transparent 70%);
   }
   .headrow{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; position:relative; z-index:1;}
+  .titleblock{flex:1; min-width:0;}
   header h1{margin:0 0 4px; font-size:1.25rem;}
   header p{margin:2px 0; font-size:0.83rem; color:var(--brand-100);}
+  .countdown{text-align:center; flex-shrink:0; padding-top:2px;}
+  .countdown .num{font-size:1.9rem; font-weight:800; line-height:1;}
+  .countdown .lbl{font-size:0.62rem; color:var(--brand-100); white-space:nowrap; margin-top:2px;}
   .gearbtn{
     background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.25); color:#fff; border-radius:10px;
     width:38px; height:38px; font-size:1.05rem; cursor:pointer; flex-shrink:0;
   }
   .gearbtn:hover{background:rgba(255,255,255,0.25);}
 
-  .stats{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; position:relative; z-index:1;}
-  .stat{background:rgba(255,255,255,0.12); backdrop-filter:blur(4px); border-radius:12px; padding:9px 14px; flex:1; min-width:118px; border:1px solid rgba(255,255,255,0.14);}
-  .stat .num{font-size:1.3rem; font-weight:800;}
-  .stat .lbl{font-size:0.7rem; color:var(--brand-100);}
+  .syncline{font-size:0.72rem; color:var(--brand-100); margin-top:14px; position:relative; z-index:1; display:flex; align-items:center; gap:6px;}
 
-  .syncline{font-size:0.72rem; color:var(--brand-100); margin-top:10px; position:relative; z-index:1; display:flex; align-items:center; gap:6px;}
+  .overview{max-width:960px; margin:14px auto 0; padding:0 16px; display:grid; grid-template-columns:1.3fr 1fr; gap:12px;}
+  @media (max-width:640px){ .overview{grid-template-columns:1fr;} }
+  .ov-col{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:0 2px 10px rgba(15,118,110,0.06);}
+  .ov-label{font-size:0.78rem; font-weight:700; color:var(--sub); margin-bottom:2px; display:flex; align-items:center; justify-content:space-between;}
+  .ov-hero{font-size:2.1rem; font-weight:800; color:var(--brand-700); line-height:1.1;}
+  .ov-hero .unit{font-size:0.9rem; font-weight:600; color:var(--sub); margin-left:4px;}
+  .ov-sub{font-size:0.75rem; color:var(--sub); margin:2px 0 12px;}
+
+  .weekchart{display:flex; align-items:flex-end; gap:5px; height:66px; border-top:1px solid var(--line); padding-top:8px;}
+  .weekchart .wk{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; justify-content:flex-end; height:100%;}
+  .weekchart .bar{width:100%; max-width:22px; background:var(--brand-200); border-radius:4px 4px 0 0; transition:height .3s;}
+  .weekchart .bar.hasval{background:var(--brand-600);}
+  .weekchart .bar.isnow{background:var(--brand-800);}
+  .weekchart .wklbl{font-size:0.56rem; color:var(--sub);}
+
+  .donutwrap{position:relative; width:132px; height:132px; margin:4px auto 8px;}
+  .donut{width:100%; height:100%; transform:rotate(-90deg);}
+  .donut circle{fill:none; stroke-width:14;}
+  .donut-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;}
+  .donut-center .num{font-size:1.35rem; font-weight:800; color:var(--ink); line-height:1.05;}
+  .donut-center .lbl{font-size:0.62rem; color:var(--sub); margin-top:1px;}
+
+  .ov-legend{display:flex; flex-direction:column; gap:7px; font-size:0.78rem;}
+  .ov-legend .row{display:flex; align-items:center; gap:7px;}
+  .ov-legend .sw{width:10px; height:10px; border-radius:3px; flex-shrink:0;}
+  .ov-legend .lbl{flex:1; color:var(--ink);}
+  .ov-legend .row.emph .lbl{font-weight:800; color:var(--brand-700);}
+  .ov-legend .val{font-weight:700; color:var(--sub); font-size:0.74rem;}
+  .ov-footer{margin-top:10px; padding-top:8px; border-top:1px solid var(--line); font-size:0.72rem; color:var(--sub);}
 
   nav.tabs{
     max-width:960px; margin:14px auto 0; padding:0 16px; display:flex; gap:6px;
@@ -162,20 +193,36 @@
 
 <header>
   <div class="headrow">
-    <div>
+    <div class="titleblock">
       <h1>🏃 แผนซ้อม 10K — เป้าหมาย 6 กันยายน 2026</h1>
       <p>อ้างอิงระบบ Jack Daniels · เป้าหมาย: จบให้ไวที่สุดเท่าที่ยัง healthy</p>
     </div>
+    <div class="countdown">
+      <div class="num" id="statDaysLeft">-</div>
+      <div class="lbl">วันจนถึงวันแข่ง</div>
+    </div>
     <button class="gearbtn" onclick="openSettings()" title="สถานะการซิงก์ข้อมูล">⚙️</button>
-  </div>
-  <div class="stats">
-    <div class="stat"><div class="num" id="statDaysLeft">-</div><div class="lbl">วันจนถึงวันแข่ง</div></div>
-    <div class="stat"><div class="num" id="statLogged">0</div><div class="lbl">วันที่บันทึกผลแล้ว</div></div>
-    <div class="stat"><div class="num" id="statKm">0</div><div class="lbl">กม.วิ่งสะสม (บันทึกจริง)</div></div>
-    <div class="stat"><div class="num" id="statCross">0</div><div class="lbl">ครั้ง 🚴🏸 (นอกเหนือวิ่ง)</div></div>
   </div>
   <div class="syncline" id="syncline">🔄 กำลังเชื่อมต่อ...</div>
 </header>
+
+<section class="overview" id="overviewCard">
+  <div class="ov-col">
+    <div class="ov-label"><span>🏃 ระยะวิ่งสะสม</span></div>
+    <div class="ov-hero"><span id="ovRunKm">0.0</span><span class="unit">กม.</span></div>
+    <div class="ov-sub" id="ovRunSub">0 ครั้งที่วิ่ง</div>
+    <div class="weekchart" id="weekChart"></div>
+  </div>
+  <div class="ov-col">
+    <div class="ov-label"><span>สัดส่วนกิจกรรมทั้งหมด</span></div>
+    <div class="donutwrap">
+      <svg viewBox="0 0 100 100" class="donut" id="donutSvg"></svg>
+      <div class="donut-center" id="donutCenter"></div>
+    </div>
+    <div class="ov-legend" id="ovLegend"></div>
+    <div class="ov-footer" id="ovFooter"></div>
+  </div>
+</section>
 
 <nav class="tabs">
   <button id="tabPlanBtn" class="active" onclick="showView('plan')">📅 แผนซ้อม</button>
@@ -501,6 +548,7 @@ function showView(name){
   document.getElementById("tabGlossaryBtn").classList.toggle("active", name==="glossary");
   document.getElementById("planToolbar").style.display = name==="plan" ? "flex" : "none";
   document.getElementById("planLegend").style.display = name==="plan" ? "flex" : "none";
+  document.getElementById("overviewCard").style.display = name==="plan" ? "grid" : "none";
   location.hash = name;
 }
 
@@ -558,22 +606,101 @@ function updateStats(){
   const now = new Date(TODAY+"T00:00:00");
   const diffDays = Math.round((race-now)/86400000);
   document.getElementById("statDaysLeft").textContent = diffDays>=0? diffDays : "🏁";
+
   const loggedDates = Object.keys(LOGS).filter(d=>LOGS[d] && LOGS[d].completed);
-  document.getElementById("statLogged").textContent = loggedDates.length;
-  let totalKm = 0, crossCount = 0;
+  const skippedCount = loggedDates.filter(d=>LOGS[d].completed==="skipped").length;
+  let totalKm = 0;
+  const counts = {run:0, bike:0, badminton:0};
   loggedDates.forEach(d=>{
     const log = LOGS[d];
     if(log.completed === "skipped") return;
     const act = log.activity || defaultActivityFor(d);
+    counts[act] = (counts[act]||0) + 1;
     if(act === "run"){
       const v = parseFloat(log.km);
       if(!isNaN(v)) totalKm += v;
-    } else {
-      crossCount++;
     }
   });
-  document.getElementById("statKm").textContent = totalKm.toFixed(1);
-  document.getElementById("statCross").textContent = crossCount;
+
+  document.getElementById("ovRunKm").textContent = totalKm.toFixed(1);
+  document.getElementById("ovRunSub").textContent = counts.run + " ครั้งที่วิ่ง";
+  document.getElementById("ovFooter").textContent =
+    `บันทึกผลแล้ว ${loggedDates.length}/${PLAN.length} วัน` + (skippedCount ? ` · ข้าม ${skippedCount} วัน` : "");
+
+  buildDonut(counts);
+  buildWeekChart();
+}
+
+function buildDonut(counts){
+  const total = counts.run + counts.bike + counts.badminton;
+  const svg = document.getElementById("donutSvg");
+  const center = document.getElementById("donutCenter");
+  const legend = document.getElementById("ovLegend");
+  const r = 40, c = 2*Math.PI*r;
+
+  if(total === 0){
+    svg.innerHTML = `<circle cx="50" cy="50" r="${r}" stroke="var(--line)" fill="none"/>`;
+    center.innerHTML = `<div class="lbl">ยังไม่มีข้อมูล</div>`;
+    legend.innerHTML = "";
+    return;
+  }
+
+  const segs = [
+    {key:"run", label:"🏃 วิ่ง", val:counts.run, color:"var(--act-run)", emph:true},
+    {key:"bike", label:"🚴 ปั่นจักรยาน", val:counts.bike, color:"var(--act-bike)"},
+    {key:"badminton", label:"🏸 แบดมินตัน", val:counts.badminton, color:"var(--act-badminton)"},
+  ].filter(s=>s.val>0);
+
+  let offset = 0;
+  let circles = `<circle cx="50" cy="50" r="${r}" stroke="var(--line)" fill="none"/>`;
+  segs.forEach(s=>{
+    const len = (s.val/total)*c;
+    circles += `<circle cx="50" cy="50" r="${r}" stroke="${s.color}" fill="none"
+      stroke-dasharray="${len} ${c-len}" stroke-dashoffset="${-offset}"/>`;
+    offset += len;
+  });
+  svg.innerHTML = circles;
+
+  const runPct = Math.round((counts.run/total)*100);
+  center.innerHTML = `<div class="num">${counts.run}</div><div class="lbl">ครั้งวิ่ง (${runPct}%)</div>`;
+
+  legend.innerHTML = segs.map(s=>`
+    <div class="row${s.emph?" emph":""}">
+      <span class="sw" style="background:${s.color}"></span>
+      <span class="lbl">${s.label}</span>
+      <span class="val">${s.val} ครั้ง · ${Math.round(s.val/total*100)}%</span>
+    </div>`).join("");
+}
+
+function buildWeekChart(){
+  const weeks = {};
+  PLAN.forEach(d=>{ if(!(d.week in weeks)) weeks[d.week] = 0; });
+  Object.keys(LOGS).forEach(date=>{
+    const log = LOGS[date];
+    if(!log || !log.completed || log.completed === "skipped") return;
+    const act = log.activity || defaultActivityFor(date);
+    if(act !== "run") return;
+    const day = PLAN_BY_DATE[date];
+    if(!day) return;
+    const v = parseFloat(log.km);
+    if(!isNaN(v)) weeks[day.week] += v;
+  });
+  const weekNums = Object.keys(weeks).map(Number).sort((a,b)=>a-b);
+  const maxKm = Math.max(1, ...weekNums.map(w=>weeks[w]));
+  const currentWeek = (PLAN_BY_DATE[TODAY] || {}).week;
+  const el = document.getElementById("weekChart");
+  el.innerHTML = weekNums.map(w=>{
+    const km = weeks[w];
+    const h = Math.max(3, Math.round((km/maxKm)*56));
+    const label = w===0 ? "เริ่ม" : "S"+w;
+    const cls = ["bar"];
+    if(km>0) cls.push("hasval");
+    if(w===currentWeek) cls.push("isnow");
+    return `<div class="wk" title="${w===0?'ช่วงเริ่มต้น':'สัปดาห์ '+w}: ${km.toFixed(1)} กม.">
+      <div class="${cls.join(' ')}" style="height:${h}px"></div>
+      <div class="wklbl">${label}</div>
+    </div>`;
+  }).join("");
 }
 
 let currentDate = null;
