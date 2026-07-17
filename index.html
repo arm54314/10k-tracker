@@ -160,14 +160,14 @@
       <h1>🏃 แผนซ้อม 10K — เป้าหมาย 6 กันยายน 2026</h1>
       <p>อ้างอิงระบบ Jack Daniels · เป้าหมาย: จบให้ไวที่สุดเท่าที่ยัง healthy</p>
     </div>
-    <button class="gearbtn" onclick="openSettings()" title="ตั้งค่าการซิงก์ข้อมูล">⚙️</button>
+    <button class="gearbtn" onclick="openSettings()" title="สถานะการซิงก์ข้อมูล">⚙️</button>
   </div>
   <div class="stats">
     <div class="stat"><div class="num" id="statDaysLeft">-</div><div class="lbl">วันจนถึงวันแข่ง</div></div>
     <div class="stat"><div class="num" id="statLogged">0</div><div class="lbl">วันที่บันทึกผลแล้ว</div></div>
     <div class="stat"><div class="num" id="statKm">0</div><div class="lbl">กม.สะสม (บันทึกจริง)</div></div>
   </div>
-  <div class="syncline" id="syncline">💾 บันทึกในเบราว์เซอร์นี้เท่านั้น — กด ⚙️ เพื่อตั้งค่าซิงก์ผ่าน GitHub</div>
+  <div class="syncline" id="syncline">🔄 กำลังเชื่อมต่อ...</div>
 </header>
 
 <nav class="tabs">
@@ -291,34 +291,18 @@
 
 <div class="overlay" id="settingsOverlay">
   <div class="sheet settingsbox">
-    <h2>⚙️ ตั้งค่าซิงก์ข้อมูลผ่าน GitHub</h2>
-    <div class="meta">เก็บผลบันทึกไว้ใน repo GitHub ของคุณเอง (ไฟล์ training-log.json) เพื่อให้เปิดจากคอมและมือถือแล้วเห็นข้อมูลเดียวกัน โดยไม่ต้อง Export/Import เอง</div>
+    <h2>⚙️ สถานะการซิงก์ข้อมูล</h2>
+    <div class="meta">เว็บนี้ซิงก์ข้อมูลอัตโนมัติอยู่แล้ว — เปิดจากคอมหรือมือถือเครื่องไหนก็เห็นข้อมูลล่าสุดเหมือนกัน ไม่ต้องตั้งค่าหรือกรอกอะไรเพิ่ม</div>
 
-    <label>GitHub username</label>
-    <input id="cfgOwner" placeholder="เช่น armrunner">
-    <label>ชื่อ repository</label>
-    <input id="cfgRepo" placeholder="เช่น 10k-tracker">
-    <label>Personal Access Token</label>
-    <div class="pwrow">
-      <input id="cfgToken" type="password" placeholder="github_pat_...">
-      <button onclick="togglePw()">👁</button>
-    </div>
     <div class="hint">
-      สร้างโทเคนแบบจำกัดสิทธิ์เฉพาะ repo นี้ที่ github.com/settings/personal-access-tokens/new →
-      เลือก "Only select repositories" เลือก repo ของคุณ → Permissions → Contents = <b>Read and write</b> →
-      ตั้งวันหมดอายุ (เช่นหลัง 10 ก.ย.) → Generate token แล้วคัดลอกมาวางที่นี่<br>
-      โทเคนนี้เก็บไว้ในเบราว์เซอร์นี้เท่านั้น ไม่ผ่านเซิร์ฟเวอร์ใดๆ ของ Claude
+      ⚠️ เนื่องจากไม่มีการล็อกอิน <b>ใครก็ตามที่มีลิงก์เว็บนี้ สามารถดูและแก้ไขข้อมูลการซ้อมได้ทั้งหมด</b> จึงควรแชร์ลิงก์เฉพาะกับคนที่ไว้ใจเท่านั้น
     </div>
 
     <div class="actions" style="margin-top:14px;">
       <button class="btn-close" onclick="closeSettings()">ปิด</button>
-      <button class="btn-close" onclick="testConnection()">ทดสอบการเชื่อมต่อ</button>
-      <button class="btn-save" onclick="saveSettings()">บันทึกการตั้งค่า</button>
+      <button class="btn-save" onclick="syncNow()">🔄 ซิงก์ตอนนี้</button>
     </div>
     <div class="statusmsg" id="settingsStatus"></div>
-    <div class="actions" style="margin-top:8px;">
-      <button class="btn-close" style="flex:none;padding:8px 14px;font-size:0.78rem;" onclick="clearSettings()">ลบการตั้งค่าซิงก์</button>
-    </div>
   </div>
 </div>
 
@@ -390,9 +374,7 @@ const THAI_DOW = ["อา","จ","อ","พ","พฤ","ศ","ส"];
 const TYPE_LABEL = {easy:"Easy",quality:"Quality",long:"Long run",rest:"พัก",cross:"แบดมินตัน",test:"Time Trial",shakeout:"Shakeout",race:"แข่งจริง"};
 
 const LOGS_KEY = "runPlan10k_logs_v1";
-const CFG_KEY = "runPlan10k_ghconfig_v1";
 let LOGS = {};
-let GH_SHA = null;
 let GH_SYNCING = false;
 
 try{ const raw = localStorage.getItem(LOGS_KEY); if(raw) LOGS = JSON.parse(raw); }
@@ -406,19 +388,8 @@ function persistLocal(){
   catch(e){ console.warn("บันทึกลงเครื่องไม่สำเร็จ", e); }
 }
 
-/* ---------- GitHub sync ---------- */
-function getCfg(){
-  try{ const raw = localStorage.getItem(CFG_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
-}
-function setCfg(cfg){ localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
-function clearCfg(){ localStorage.removeItem(CFG_KEY); GH_SHA=null; updateSyncline("💾 บันทึกในเบราว์เซอร์นี้เท่านั้น — กด ⚙️ เพื่อตั้งค่าซิงก์ผ่าน GitHub"); }
-
-function b64EncodeUnicode(str){
-  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (m,p1)=>String.fromCharCode('0x'+p1)));
-}
-function b64DecodeUnicode(str){
-  return decodeURIComponent(atob(str.replace(/\s/g,'')).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-}
+/* ---------- Sync ผ่าน Cloudflare Worker (ไม่ต้องล็อกอิน/กรอก token ทุกเครื่อง) ---------- */
+const SYNC_URL = "https://10k-tracker-sync.arm54314.workers.dev/";
 
 function updateSyncline(text){
   const el = document.getElementById("syncline");
@@ -426,150 +397,68 @@ function updateSyncline(text){
 }
 
 async function ghLoad(silent){
-  const cfg = getCfg();
-  if(!cfg || !cfg.owner || !cfg.repo || !cfg.token) return {ok:false, reason:"no-config"};
-  const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path||'training-log.json'}`;
   try{
-    const r = await fetch(url, {headers:{
-      "Authorization": `token ${cfg.token}`,
-      "Accept": "application/vnd.github+json"
-    }});
-    if(r.status === 200){
-      const body = await r.json();
-      GH_SHA = body.sha;
-      const text = b64DecodeUnicode(body.content);
-      const remote = JSON.parse(text);
+    const r = await fetch(SYNC_URL);
+    if(r.ok){
+      const remote = await r.json();
       LOGS = Object.assign({}, LOGS, remote);
       persistLocal();
-      if(!silent) updateSyncline("☁️ ซิงก์แล้ว (โหลดข้อมูลจาก GitHub สำเร็จ)");
-      return {ok:true, existed:true};
-    } else if(r.status === 404){
-      GH_SHA = null;
-      if(!silent) updateSyncline("☁️ เชื่อมต่อ GitHub สำเร็จ — ยังไม่มีไฟล์ข้อมูล จะสร้างให้อัตโนมัติเมื่อบันทึกครั้งแรก");
-      return {ok:true, existed:false};
+      if(!silent) updateSyncline("☁️ ซิงก์แล้ว (โหลดข้อมูลล่าสุดสำเร็จ)");
+      return {ok:true};
     } else {
       const errBody = await r.text();
-      if(!silent) updateSyncline("⚠️ เชื่อมต่อ GitHub ไม่สำเร็จ ("+r.status+")");
+      if(!silent) updateSyncline("⚠️ ซิงก์ไม่สำเร็จ ("+r.status+") — ใช้ข้อมูลในเครื่องนี้ไปก่อน");
       return {ok:false, status:r.status, body:errBody};
     }
   }catch(e){
-    if(!silent) updateSyncline("⚠️ เชื่อมต่อ GitHub ไม่สำเร็จ (เครือข่าย/CORS) — ใช้ข้อมูลในเครื่องนี้ไปก่อน");
+    updateSyncline("⚠️ ซิงก์ไม่สำเร็จ (เครือข่าย) — ใช้ข้อมูลในเครื่องนี้ไปก่อน");
     return {ok:false, error:e.toString()};
   }
 }
 
 async function ghSave(){
-  const cfg = getCfg();
-  if(!cfg || !cfg.owner || !cfg.repo || !cfg.token) return {ok:false, reason:"no-config"};
   if(GH_SYNCING) return {ok:false, reason:"busy"};
   GH_SYNCING = true;
-  updateSyncline("🔄 กำลังซิงก์ขึ้น GitHub...");
-  const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path||'training-log.json'}`;
-  const content = b64EncodeUnicode(JSON.stringify(LOGS, null, 2));
-  const doPut = async (sha)=>{
-    return fetch(url, {
-      method:"PUT",
-      headers:{
-        "Authorization": `token ${cfg.token}`,
-        "Accept": "application/vnd.github+json",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: "update training log " + new Date().toISOString(),
-        content: content,
-        sha: sha || undefined
-      })
-    });
-  };
+  updateSyncline("🔄 กำลังซิงก์...");
   try{
-    let r = await doPut(GH_SHA);
-    if(r.status === 409){
-      // conflict — refetch sha and retry once
-      const reload = await ghLoad(true);
-      r = await doPut(GH_SHA);
-    }
-    if(r.status === 200 || r.status === 201){
-      const body = await r.json();
-      GH_SHA = body.content ? body.content.sha : GH_SHA;
+    const r = await fetch(SYNC_URL, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(LOGS)
+    });
+    GH_SYNCING = false;
+    if(r.ok){
       updateSyncline("☁️ ซิงก์ล่าสุด: " + new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}));
-      GH_SYNCING = false;
       return {ok:true};
     } else {
       const errBody = await r.text();
       updateSyncline("⚠️ ซิงก์ไม่สำเร็จ ("+r.status+") — บันทึกไว้ในเครื่องนี้แล้ว ลองใหม่ภายหลัง");
-      GH_SYNCING = false;
       return {ok:false, status:r.status, body:errBody};
     }
   }catch(e){
-    updateSyncline("⚠️ ซิงก์ไม่สำเร็จ (เครือข่าย) — บันทึกไว้ในเครื่องนี้แล้ว ลองใหม่ภายหลัง");
     GH_SYNCING = false;
+    updateSyncline("⚠️ ซิงก์ไม่สำเร็จ (เครือข่าย) — บันทึกไว้ในเครื่องนี้แล้ว ลองใหม่ภายหลัง");
     return {ok:false, error:e.toString()};
   }
 }
 
 function openSettings(){
-  const cfg = getCfg() || {};
-  document.getElementById("cfgOwner").value = cfg.owner || "";
-  document.getElementById("cfgRepo").value = cfg.repo || "";
-  document.getElementById("cfgToken").value = cfg.token || "";
   document.getElementById("settingsStatus").className = "statusmsg";
   document.getElementById("settingsStatus").textContent = "";
   document.getElementById("settingsOverlay").classList.add("open");
 }
 function closeSettings(){ document.getElementById("settingsOverlay").classList.remove("open"); }
-function togglePw(){
-  const el = document.getElementById("cfgToken");
-  el.type = el.type === "password" ? "text" : "password";
-}
-async function saveSettings(){
-  const owner = document.getElementById("cfgOwner").value.trim();
-  const repo = document.getElementById("cfgRepo").value.trim();
-  const token = document.getElementById("cfgToken").value.trim();
+async function syncNow(){
   const statusEl = document.getElementById("settingsStatus");
-  if(!owner || !repo || !token){
-    statusEl.className = "statusmsg err"; statusEl.textContent = "กรอกให้ครบทั้ง 3 ช่องก่อนบันทึก"; return;
-  }
-  setCfg({owner, repo, token, path:"training-log.json"});
-  statusEl.className = "statusmsg ok"; statusEl.textContent = "บันทึกการตั้งค่าแล้ว กำลังเชื่อมต่อ...";
+  statusEl.className = "statusmsg ok"; statusEl.textContent = "กำลังซิงก์...";
   const res = await ghLoad(false);
   if(res.ok){
-    statusEl.className = "statusmsg ok";
-    statusEl.textContent = res.existed ? "เชื่อมต่อสำเร็จ โหลดข้อมูลเดิมจาก GitHub แล้ว ✓" : "เชื่อมต่อสำเร็จ ✓ (ยังไม่มีไฟล์ข้อมูล จะสร้างให้ตอนบันทึกครั้งแรก)";
-    render();
+    statusEl.className = "statusmsg ok"; statusEl.textContent = "ซิงก์ล่าสุดสำเร็จ ✓";
+    render(); updateStats();
   } else {
     statusEl.className = "statusmsg err";
-    statusEl.textContent = "เชื่อมต่อไม่สำเร็จ: " + (res.status ? ("HTTP "+res.status+" — เช็ค username/repo/token") : (res.reason==="no-config" ? "กรอกข้อมูลไม่ครบ" : "เครือข่ายมีปัญหา"));
+    statusEl.textContent = "ซิงก์ไม่สำเร็จ: " + (res.status ? ("HTTP "+res.status) : "เครือข่ายมีปัญหา");
   }
-}
-async function testConnection(){
-  const owner = document.getElementById("cfgOwner").value.trim();
-  const repo = document.getElementById("cfgRepo").value.trim();
-  const token = document.getElementById("cfgToken").value.trim();
-  const statusEl = document.getElementById("settingsStatus");
-  if(!owner || !repo || !token){
-    statusEl.className = "statusmsg err"; statusEl.textContent = "กรอกให้ครบทั้ง 3 ช่องก่อนทดสอบ"; return;
-  }
-  statusEl.className = "statusmsg ok"; statusEl.textContent = "กำลังทดสอบ...";
-  const tmp = getCfg();
-  setCfg({owner, repo, token, path:"training-log.json"});
-  const res = await ghLoad(false);
-  if(res.ok){
-    statusEl.className = "statusmsg ok";
-    statusEl.textContent = res.existed ? "เชื่อมต่อสำเร็จ ✓ พบไฟล์ข้อมูลเดิมแล้ว" : "เชื่อมต่อสำเร็จ ✓ (ยังไม่มีไฟล์ข้อมูล — ปกติสำหรับการตั้งค่าครั้งแรก)";
-  } else {
-    statusEl.className = "statusmsg err";
-    statusEl.textContent = "เชื่อมต่อไม่สำเร็จ: " + (res.status ? ("HTTP "+res.status+" — เช็ค username/repo/token ว่าถูกต้องและมีสิทธิ์ Contents: Read & write") : "เครือข่ายมีปัญหาหรือ token ไม่ถูกต้อง");
-    if(!tmp) clearCfg(); else setCfg(tmp);
-  }
-}
-function clearSettings(){
-  if(!confirm("ลบการตั้งค่าซิงก์ GitHub? ข้อมูลที่บันทึกในเครื่องนี้จะยังอยู่ แต่จะไม่ซิงก์ขึ้น GitHub อีก")) return;
-  clearCfg();
-  document.getElementById("cfgOwner").value = "";
-  document.getElementById("cfgRepo").value = "";
-  document.getElementById("cfgToken").value = "";
-  document.getElementById("settingsStatus").className = "statusmsg";
-  closeSettings();
 }
 
 /* ---------- Views / tabs ---------- */
@@ -669,8 +558,7 @@ async function saveLog(){
   persistLocal();
   document.getElementById("savedmsg").style.display = "block";
   render();
-  const cfg = getCfg();
-  if(cfg){ await ghSave(); }
+  await ghSave();
 }
 
 function scrollToToday(){
@@ -699,8 +587,7 @@ function importData(evt){
       LOGS = Object.assign({}, LOGS, parsed);
       persistLocal();
       render();
-      const cfg = getCfg();
-      if(cfg){ await ghSave(); }
+      await ghSave();
       alert("นำเข้าข้อมูลสำเร็จ");
     }catch(e){ alert("ไฟล์ไม่ถูกต้อง ไม่สามารถนำเข้าได้"); }
   };
@@ -714,12 +601,8 @@ function importData(evt){
   const startView = location.hash === "#glossary" ? "glossary" : "plan";
   showView(startView);
   setTimeout(scrollToToday, 100);
-  const cfg = getCfg();
-  if(cfg){
-    updateSyncline("🔄 กำลังเชื่อมต่อ GitHub...");
-    const res = await ghLoad(false);
-    if(res.ok) render();
-  }
+  const res = await ghLoad(false);
+  if(res.ok){ render(); updateStats(); }
 })();
 </script>
 </body>
