@@ -69,6 +69,10 @@
   .legend{max-width:960px; margin:12px auto 0; padding:0 16px; display:flex; gap:8px; flex-wrap:wrap; font-size:0.71rem;}
   .legend span{display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:20px; background:var(--card); border:1px solid var(--line);}
   .dot{width:9px; height:9px; border-radius:50%; display:inline-block;}
+  .statuslegend{margin-top:6px;}
+  .statuslegend > span:first-child{background:none; border:none; padding:3px 2px; color:var(--sub); font-weight:700;}
+  .ring{width:11px; height:11px; border-radius:50%; display:inline-block; background:#fff; border:2px solid var(--done);}
+  .ring.partial{border-color:#d97706;}
 
   main{max-width:960px; margin:0 auto; padding:16px;}
   .view{display:none;}
@@ -90,7 +94,9 @@
   .day .dnum{font-size:0.85rem; font-weight:700;}
   .badge{align-self:flex-start; font-size:0.62rem; font-weight:700; padding:2px 6px; border-radius:6px; margin-top:1px;}
   .day .title{font-size:0.68rem; color:var(--ink); line-height:1.25; flex:1;}
-  .check{position:absolute; top:6px; right:6px; width:16px; height:16px; border-radius:50%; background:var(--done); color:#fff; font-size:10px; display:flex; align-items:center; justify-content:center;}
+  .statusicon{position:absolute; top:4px; right:4px; width:21px; height:21px; border-radius:50%; background:#fff; font-size:12px; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.22); border:2px solid var(--done);}
+  .statusicon.partial{border-color:#d97706;}
+  .statusicon.skipped{border-color:#b91c1c; font-size:10px;}
 
   .type-easy .badge{background:var(--easy-bg); color:var(--easy);}
   .type-quality .badge{background:var(--quality-bg); color:var(--quality);}
@@ -165,7 +171,8 @@
   <div class="stats">
     <div class="stat"><div class="num" id="statDaysLeft">-</div><div class="lbl">วันจนถึงวันแข่ง</div></div>
     <div class="stat"><div class="num" id="statLogged">0</div><div class="lbl">วันที่บันทึกผลแล้ว</div></div>
-    <div class="stat"><div class="num" id="statKm">0</div><div class="lbl">กม.สะสม (บันทึกจริง)</div></div>
+    <div class="stat"><div class="num" id="statKm">0</div><div class="lbl">กม.วิ่งสะสม (บันทึกจริง)</div></div>
+    <div class="stat"><div class="num" id="statCross">0</div><div class="lbl">ครั้ง 🚴🏸 (นอกเหนือวิ่ง)</div></div>
   </div>
   <div class="syncline" id="syncline">🔄 กำลังเชื่อมต่อ...</div>
 </header>
@@ -191,6 +198,15 @@
   <span><span class="dot" style="background:var(--shakeout)"></span>Shakeout</span>
   <span><span class="dot" style="background:var(--rest)"></span>พัก</span>
   <span><span class="dot" style="background:var(--race)"></span>แข่งจริง</span>
+</div>
+<div class="legend statuslegend" id="statusLegend">
+  <span>ไอคอนมุมการ์ด:</span>
+  <span>🏃 วิ่ง</span>
+  <span>🚴 ปั่นจักรยาน</span>
+  <span>🏸 แบดมินตัน</span>
+  <span><span class="ring done"></span>ทำครบ</span>
+  <span><span class="ring partial"></span>บางส่วน</span>
+  <span>⏭️ ข้าม</span>
 </div>
 
 <main>
@@ -260,8 +276,15 @@
       <option value="skipped">⏭️ ข้าม/ไม่ได้ทำ</option>
     </select>
 
+    <label>กิจกรรมที่ทำจริง</label>
+    <select id="fActivity" onchange="onActivityChange()">
+      <option value="run">🏃 วิ่ง</option>
+      <option value="bike">🚴 ปั่นจักรยาน (ไม่ต้องบันทึกระยะ)</option>
+      <option value="badminton">🏸 แบดมินตัน (ไม่ต้องบันทึกระยะ)</option>
+    </select>
+
     <div class="row2">
-      <div><label>ระยะจริง (กม.)</label><input type="number" step="0.1" id="fKm" placeholder="เช่น 5.2"></div>
+      <div id="kmFieldWrap"><label>ระยะจริง (กม.)</label><input type="number" step="0.1" id="fKm" placeholder="เช่น 5.2"></div>
       <div><label>เวลาที่ใช้ (นาที)</label><input type="number" step="1" id="fMin" placeholder="เช่น 42"></div>
     </div>
     <div class="row2">
@@ -372,6 +395,15 @@ const PLAN = [
 
 const THAI_DOW = ["อา","จ","อ","พ","พฤ","ศ","ส"];
 const TYPE_LABEL = {easy:"Easy",quality:"Quality",long:"Long run",rest:"พัก",cross:"แบดมินตัน",test:"Time Trial",shakeout:"Shakeout",race:"แข่งจริง"};
+
+const ACTIVITY_ICON = {run:"🏃", bike:"🚴", badminton:"🏸"};
+const ACTIVITY_LABEL = {run:"วิ่ง", bike:"ปั่นจักรยาน", badminton:"แบดมินตัน"};
+const PLAN_BY_DATE = {};
+PLAN.forEach(d=>{ PLAN_BY_DATE[d.date] = d; });
+function defaultActivityFor(date){
+  const day = PLAN_BY_DATE[date];
+  return (day && day.type === "cross") ? "badminton" : "run";
+}
 
 const LOGS_KEY = "runPlan10k_logs_v1";
 let LOGS = {};
@@ -498,11 +530,22 @@ function render(){
     const dow = THAI_DOW[dObj.getDay()];
     const dnum = day.date.slice(8,10);
     const log = LOGS[day.date];
+    let statusHtml = "";
+    if(log && log.completed){
+      if(log.completed === "skipped"){
+        statusHtml = `<div class="statusicon skipped" title="ข้าม/ไม่ได้ทำ">⏭️</div>`;
+      } else {
+        const act = log.activity || defaultActivityFor(day.date);
+        const cls = log.completed === "partial" ? "partial" : "done";
+        const label = ACTIVITY_LABEL[act] + (log.completed === "partial" ? " (บางส่วน)" : "");
+        statusHtml = `<div class="statusicon ${cls}" title="${label}">${ACTIVITY_ICON[act]}</div>`;
+      }
+    }
     cell.innerHTML = `
       <div class="dow">${dow} ${dnum}/${day.date.slice(5,7)}</div>
       <span class="badge">${TYPE_LABEL[day.type]}</span>
       <div class="title">${day.title}</div>
-      ${log && log.completed ? `<div class="check">✓</div>` : ""}
+      ${statusHtml}
     `;
     cell.onclick = ()=>openSheet(day.date);
     grid.appendChild(cell);
@@ -517,9 +560,20 @@ function updateStats(){
   document.getElementById("statDaysLeft").textContent = diffDays>=0? diffDays : "🏁";
   const loggedDates = Object.keys(LOGS).filter(d=>LOGS[d] && LOGS[d].completed);
   document.getElementById("statLogged").textContent = loggedDates.length;
-  let totalKm = 0;
-  loggedDates.forEach(d=>{ const v=parseFloat(LOGS[d].km); if(!isNaN(v)) totalKm += v; });
+  let totalKm = 0, crossCount = 0;
+  loggedDates.forEach(d=>{
+    const log = LOGS[d];
+    if(log.completed === "skipped") return;
+    const act = log.activity || defaultActivityFor(d);
+    if(act === "run"){
+      const v = parseFloat(log.km);
+      if(!isNaN(v)) totalKm += v;
+    } else {
+      crossCount++;
+    }
+  });
   document.getElementById("statKm").textContent = totalKm.toFixed(1);
+  document.getElementById("statCross").textContent = crossCount;
 }
 
 let currentDate = null;
@@ -534,22 +588,31 @@ function openSheet(date){
 
   const log = LOGS[date] || {};
   document.getElementById("fCompleted").value = log.completed || "";
+  document.getElementById("fActivity").value = log.activity || defaultActivityFor(date);
   document.getElementById("fKm").value = log.km || "";
   document.getElementById("fMin").value = log.min || "";
   document.getElementById("fHr").value = log.hr || "";
   document.getElementById("fFeel").value = log.feel || "";
   document.getElementById("fNotes").value = log.notes || "";
   document.getElementById("savedmsg").style.display = "none";
+  onActivityChange();
 
   document.getElementById("overlay").classList.add("open");
 }
 function closeSheet(){ document.getElementById("overlay").classList.remove("open"); }
 
+function onActivityChange(){
+  const act = document.getElementById("fActivity").value;
+  document.getElementById("kmFieldWrap").style.display = act === "run" ? "" : "none";
+}
+
 async function saveLog(){
   if(!currentDate) return;
+  const activity = document.getElementById("fActivity").value;
   LOGS[currentDate] = {
     completed: document.getElementById("fCompleted").value,
-    km: document.getElementById("fKm").value,
+    activity: activity,
+    km: activity === "run" ? document.getElementById("fKm").value : "",
     min: document.getElementById("fMin").value,
     hr: document.getElementById("fHr").value,
     feel: document.getElementById("fFeel").value,
