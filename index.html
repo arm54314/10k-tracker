@@ -6,87 +6,99 @@
 <title>แผนซ้อม 10K — ติดตามผล</title>
 <style>
   :root{
-    --bg:#f7f8fa; --card:#ffffff; --ink:#1f2430; --sub:#6b7280; --line:#e5e7eb;
-    --easy:#3b82f6; --easy-bg:#eaf1fd;
-    --quality:#f97316; --quality-bg:#fef1e6;
-    --long:#8b5cf6; --long-bg:#f2ecfd;
-    --rest:#9ca3af; --rest-bg:#f1f2f4;
-    --cross:#14b8a6; --cross-bg:#e6f8f5;
-    --test:#eab308; --test-bg:#fdf7e0;
-    --shakeout:#38bdf8; --shakeout-bg:#e7f6fd;
-    --race:#dc2626; --race-bg:#fde8e8;
-    --done:#16a34a;
+    --brand-900:#0b3b38; --brand-800:#0e4d48; --brand-700:#0f766e; --brand-600:#0d9488;
+    --brand-500:#14b8a6; --brand-400:#2dd4bf; --brand-200:#99f0e4; --brand-100:#ccfbf1; --brand-50:#f0fdfa;
+    --bg:#f3faf9; --card:#ffffff; --ink:#0b1f1c; --sub:#5c6f6c; --line:#dbeae7;
+
+    --easy:#2a78d6; --easy-bg:#e8f1fc;
+    --quality:#c95522; --quality-bg:#fdece1;
+    --long:#4a3aa7; --long-bg:#ece9f9;
+    --cross:#0f9d73; --cross-bg:#dff6ee;
+    --test:#a3720a; --test-bg:#fdf1d8;
+    --shakeout:#1a7a1a; --shakeout-bg:#e2f4e2;
+    --rest:#7c8c89; --rest-bg:#eef2f1;
+    --race:#c8322f; --race-bg:#fbe7e6;
+
+    --done:#0f9d73;
   }
   *{box-sizing:border-box;}
   body{
     margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;
     background:var(--bg); color:var(--ink); padding-bottom:60px;
   }
-  header{
-    background:linear-gradient(135deg,#1f2937,#111827); color:#fff; padding:22px 16px 18px;
-  }
-  header h1{margin:0 0 4px; font-size:1.3rem;}
-  header p{margin:2px 0; font-size:0.85rem; color:#cbd5e1;}
-  .stats{
-    display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;
-  }
-  .stat{
-    background:rgba(255,255,255,0.08); border-radius:10px; padding:8px 14px; flex:1; min-width:110px;
-  }
-  .stat .num{font-size:1.25rem; font-weight:700;}
-  .stat .lbl{font-size:0.72rem; color:#cbd5e1;}
+  a{color:var(--brand-700);}
 
-  .toolbar{
-    max-width:960px; margin:14px auto 0; padding:0 16px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+  header{
+    background:linear-gradient(135deg,var(--brand-900),var(--brand-600) 75%,var(--brand-400));
+    color:#fff; padding:20px 16px 14px; position:relative; overflow:hidden;
   }
-  .toolbar button{
-    background:var(--card); border:1px solid var(--line); border-radius:8px; padding:7px 12px;
-    font-size:0.82rem; cursor:pointer; color:var(--ink);
+  header::after{
+    content:""; position:absolute; right:-40px; top:-60px; width:220px; height:220px; border-radius:50%;
+    background:radial-gradient(circle,rgba(255,255,255,0.14),transparent 70%);
   }
-  .toolbar button:hover{background:#f0f1f3;}
+  .headrow{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; position:relative; z-index:1;}
+  header h1{margin:0 0 4px; font-size:1.25rem;}
+  header p{margin:2px 0; font-size:0.83rem; color:var(--brand-100);}
+  .gearbtn{
+    background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.25); color:#fff; border-radius:10px;
+    width:38px; height:38px; font-size:1.05rem; cursor:pointer; flex-shrink:0;
+  }
+  .gearbtn:hover{background:rgba(255,255,255,0.25);}
+
+  .stats{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; position:relative; z-index:1;}
+  .stat{background:rgba(255,255,255,0.12); backdrop-filter:blur(4px); border-radius:12px; padding:9px 14px; flex:1; min-width:118px; border:1px solid rgba(255,255,255,0.14);}
+  .stat .num{font-size:1.3rem; font-weight:800;}
+  .stat .lbl{font-size:0.7rem; color:var(--brand-100);}
+
+  .syncline{font-size:0.72rem; color:var(--brand-100); margin-top:10px; position:relative; z-index:1; display:flex; align-items:center; gap:6px;}
+
+  nav.tabs{
+    max-width:960px; margin:14px auto 0; padding:0 16px; display:flex; gap:6px;
+  }
+  nav.tabs button{
+    flex:1; padding:11px; border-radius:12px; border:1px solid var(--line); background:var(--card);
+    font-size:0.9rem; font-weight:700; color:var(--sub); cursor:pointer;
+  }
+  nav.tabs button.active{background:var(--brand-600); border-color:var(--brand-600); color:#fff; box-shadow:0 4px 12px rgba(13,148,136,0.3);}
+
+  .toolbar{max-width:960px; margin:14px auto 0; padding:0 16px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  .toolbar button{background:var(--card); border:1px solid var(--line); border-radius:9px; padding:7px 12px; font-size:0.8rem; cursor:pointer; color:var(--ink);}
+  .toolbar button:hover{background:var(--brand-50); border-color:var(--brand-400);}
   .toolbar input[type=file]{display:none;}
 
-  .legend{
-    max-width:960px; margin:12px auto 0; padding:0 16px; display:flex; gap:8px; flex-wrap:wrap; font-size:0.72rem;
-  }
+  .legend{max-width:960px; margin:12px auto 0; padding:0 16px; display:flex; gap:8px; flex-wrap:wrap; font-size:0.71rem;}
   .legend span{display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:20px; background:var(--card); border:1px solid var(--line);}
   .dot{width:9px; height:9px; border-radius:50%; display:inline-block;}
 
   main{max-width:960px; margin:0 auto; padding:16px;}
-  .week{margin-bottom:22px;}
-  .week-title{
-    font-size:0.85rem; font-weight:700; color:var(--sub); margin:0 0 8px; display:flex; justify-content:space-between; align-items:baseline;
-  }
-  .week-title .sub{font-weight:400; font-size:0.75rem;}
+  .view{display:none;}
+  .view.active{display:block;}
 
-  .grid{
-    display:grid; grid-template-columns:repeat(7,1fr); gap:8px;
-  }
+  .week{margin-bottom:20px;}
+  .week-title{font-size:0.85rem; font-weight:800; color:var(--brand-700); margin:0 0 8px; display:flex; justify-content:space-between; align-items:baseline;}
+  .week-title .sub{font-weight:400; font-size:0.75rem; color:var(--sub);}
+
+  .grid{display:grid; grid-template-columns:repeat(7,1fr); gap:8px;}
   .day{
-    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:8px 7px;
-    min-height:92px; cursor:pointer; position:relative; transition:transform .1s;
+    background:var(--card); border:1px solid var(--line); border-radius:12px; padding:8px 7px;
+    min-height:92px; cursor:pointer; position:relative; transition:transform .12s, box-shadow .12s;
     display:flex; flex-direction:column; gap:4px;
   }
-  .day:hover{transform:translateY(-2px); box-shadow:0 4px 10px rgba(0,0,0,0.06);}
-  .day.today{outline:2px solid #111827; outline-offset:1px;}
+  .day:hover{transform:translateY(-2px); box-shadow:0 6px 16px rgba(15,118,110,0.12); border-color:var(--brand-400);}
+  .day.today{outline:2px solid var(--brand-600); outline-offset:1px;}
   .day .dow{font-size:0.65rem; color:var(--sub);}
   .day .dnum{font-size:0.85rem; font-weight:700;}
-  .badge{
-    align-self:flex-start; font-size:0.62rem; font-weight:700; padding:2px 6px; border-radius:6px; margin-top:1px;
-  }
+  .badge{align-self:flex-start; font-size:0.62rem; font-weight:700; padding:2px 6px; border-radius:6px; margin-top:1px;}
   .day .title{font-size:0.68rem; color:var(--ink); line-height:1.25; flex:1;}
-  .check{
-    position:absolute; top:6px; right:6px; width:16px; height:16px; border-radius:50%;
-    background:var(--done); color:#fff; font-size:10px; display:flex; align-items:center; justify-content:center;
-  }
+  .check{position:absolute; top:6px; right:6px; width:16px; height:16px; border-radius:50%; background:var(--done); color:#fff; font-size:10px; display:flex; align-items:center; justify-content:center;}
 
   .type-easy .badge{background:var(--easy-bg); color:var(--easy);}
   .type-quality .badge{background:var(--quality-bg); color:var(--quality);}
   .type-long .badge{background:var(--long-bg); color:var(--long);}
   .type-rest .badge{background:var(--rest-bg); color:var(--rest);}
   .type-cross .badge{background:var(--cross-bg); color:var(--cross);}
-  .type-test .badge{background:var(--test-bg); color:#a16207;}
-  .type-shakeout .badge{background:var(--shakeout-bg); color:#0284c7;}
+  .type-test .badge{background:var(--test-bg); color:var(--test);}
+  .type-shakeout .badge{background:var(--shakeout-bg); color:var(--shakeout);}
   .type-race{background:var(--race-bg); border-color:var(--race);}
   .type-race .badge{background:var(--race); color:#fff;}
 
@@ -99,73 +111,140 @@
     .badge{margin-top:0;}
   }
 
-  .overlay{
-    position:fixed; inset:0; background:rgba(15,23,42,0.5); display:none; align-items:flex-end; justify-content:center; z-index:50;
-  }
+  .overlay{position:fixed; inset:0; background:rgba(6,30,28,0.55); display:none; align-items:flex-end; justify-content:center; z-index:50;}
   .overlay.open{display:flex;}
-  .sheet{
-    background:#fff; width:100%; max-width:520px; border-radius:16px 16px 0 0; padding:20px; max-height:88vh; overflow-y:auto;
-    animation:up .18s ease-out;
-  }
-  @media (min-width:640px){
-    .overlay{align-items:center;}
-    .sheet{border-radius:16px; margin-bottom:40px;}
-  }
+  .sheet{background:#fff; width:100%; max-width:520px; border-radius:18px 18px 0 0; padding:20px; max-height:88vh; overflow-y:auto; animation:up .18s ease-out;}
+  @media (min-width:640px){ .overlay{align-items:center;} .sheet{border-radius:18px; margin-bottom:40px;} }
   @keyframes up{from{transform:translateY(30px); opacity:0;} to{transform:translateY(0); opacity:1;}}
   .sheet h2{margin:0 0 2px; font-size:1.05rem;}
   .sheet .meta{font-size:0.78rem; color:var(--sub); margin-bottom:12px;}
-  .sheet .detailbox{
-    background:#f7f8fa; border-radius:10px; padding:12px; font-size:0.85rem; line-height:1.5; margin-bottom:16px;
-  }
-  .sheet label{display:block; font-size:0.78rem; font-weight:600; margin:10px 0 4px;}
-  .sheet input, .sheet select, .sheet textarea{
-    width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-size:0.88rem; font-family:inherit;
-  }
+  .sheet .detailbox{background:var(--brand-50); border:1px solid var(--brand-100); border-radius:12px; padding:12px; font-size:0.85rem; line-height:1.5; margin-bottom:16px;}
+  .sheet label{display:block; font-size:0.78rem; font-weight:700; margin:10px 0 4px; color:var(--brand-800);}
+  .sheet input, .sheet select, .sheet textarea{width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:9px; font-size:0.88rem; font-family:inherit;}
+  .sheet input:focus, .sheet select:focus, .sheet textarea:focus{outline:none; border-color:var(--brand-500); box-shadow:0 0 0 3px var(--brand-100);}
   .sheet textarea{min-height:60px; resize:vertical;}
   .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
   .sheet .actions{display:flex; gap:8px; margin-top:16px;}
-  .sheet .actions button{
-    flex:1; padding:10px; border-radius:8px; border:none; font-size:0.9rem; cursor:pointer; font-weight:600;
-  }
-  .btn-save{background:#111827; color:#fff;}
-  .btn-close{background:#f1f2f4; color:var(--ink);}
-  .savedmsg{font-size:0.75rem; color:var(--done); margin-top:8px; display:none;}
+  .sheet .actions button{flex:1; padding:11px; border-radius:10px; border:none; font-size:0.9rem; cursor:pointer; font-weight:700;}
+  .btn-save{background:var(--brand-600); color:#fff;}
+  .btn-save:hover{background:var(--brand-700);}
+  .btn-close{background:var(--rest-bg); color:var(--ink);}
+  .savedmsg{font-size:0.75rem; color:var(--done); margin-top:8px; display:none; font-weight:700;}
+
+  /* glossary */
+  .gsec{margin-bottom:22px;}
+  .gsec h2{font-size:1rem; color:var(--brand-700); border-bottom:2px solid var(--brand-100); padding-bottom:6px; margin-bottom:12px;}
+  .terms{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px;}
+  .term{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px;}
+  .term .t{font-weight:800; color:var(--brand-700); font-size:0.92rem; margin-bottom:5px; display:flex; align-items:center; gap:6px;}
+  .term .t .abbr{background:var(--brand-100); color:var(--brand-800); font-size:0.68rem; padding:2px 7px; border-radius:6px; font-weight:800;}
+  .term p{margin:0; font-size:0.82rem; line-height:1.55; color:#3a4644;}
+
+  /* settings modal */
+  .settingsbox label{display:block; font-size:0.78rem; font-weight:700; margin:10px 0 4px; color:var(--brand-800);}
+  .settingsbox input{width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:9px; font-size:0.88rem;}
+  .settingsbox .hint{font-size:0.72rem; color:var(--sub); margin-top:4px; line-height:1.5;}
+  .pwrow{display:flex; gap:6px;}
+  .pwrow input{flex:1;}
+  .pwrow button{border:1px solid var(--line); background:var(--brand-50); border-radius:9px; padding:0 12px; cursor:pointer;}
+  .statusmsg{font-size:0.78rem; margin-top:10px; padding:8px 10px; border-radius:8px; display:none;}
+  .statusmsg.ok{display:block; background:var(--cross-bg); color:var(--cross);}
+  .statusmsg.err{display:block; background:var(--race-bg); color:var(--race);}
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🏃 แผนซ้อม 10K — เป้าหมาย 6 กันยายน 2026</h1>
-  <p>อ้างอิงระบบ Jack Daniels · เป้าหมาย: จบให้ไวที่สุดเท่าที่ยัง healthy</p>
+  <div class="headrow">
+    <div>
+      <h1>🏃 แผนซ้อม 10K — เป้าหมาย 6 กันยายน 2026</h1>
+      <p>อ้างอิงระบบ Jack Daniels · เป้าหมาย: จบให้ไวที่สุดเท่าที่ยัง healthy</p>
+    </div>
+    <button class="gearbtn" onclick="openSettings()" title="ตั้งค่าการซิงก์ข้อมูล">⚙️</button>
+  </div>
   <div class="stats">
     <div class="stat"><div class="num" id="statDaysLeft">-</div><div class="lbl">วันจนถึงวันแข่ง</div></div>
     <div class="stat"><div class="num" id="statLogged">0</div><div class="lbl">วันที่บันทึกผลแล้ว</div></div>
     <div class="stat"><div class="num" id="statKm">0</div><div class="lbl">กม.สะสม (บันทึกจริง)</div></div>
   </div>
+  <div class="syncline" id="syncline">💾 บันทึกในเบราว์เซอร์นี้เท่านั้น — กด ⚙️ เพื่อตั้งค่าซิงก์ผ่าน GitHub</div>
 </header>
 
-<div class="toolbar">
+<nav class="tabs">
+  <button id="tabPlanBtn" class="active" onclick="showView('plan')">📅 แผนซ้อม</button>
+  <button id="tabGlossaryBtn" onclick="showView('glossary')">📖 คำศัพท์</button>
+</nav>
+
+<div class="toolbar" id="planToolbar">
   <button onclick="scrollToToday()">📍 ไปยังสัปดาห์นี้</button>
-  <button onclick="exportData()">⬇️ Export ข้อมูล</button>
-  <button onclick="document.getElementById('importFile').click()">⬆️ Import ข้อมูล</button>
+  <button onclick="exportData()">⬇️ Export สำรอง</button>
+  <button onclick="document.getElementById('importFile').click()">⬆️ Import</button>
   <input type="file" id="importFile" accept="application/json" onchange="importData(event)">
 </div>
-<p style="max-width:960px;margin:8px auto 0;padding:0 16px;font-size:0.72rem;color:#6b7280;">
-  ℹ️ ข้อมูลที่บันทึกจะเก็บไว้ในเบราว์เซอร์/อุปกรณ์นี้เท่านั้น ถ้าต้องการใช้ทั้งคอมและมือถือให้ข้อมูลตรงกัน ให้กด <b>Export</b> จากเครื่องที่บันทึกไว้ แล้วกด <b>Import</b> ไฟล์นั้นในอีกเครื่อง
-</p>
 
-<div class="legend">
+<div class="legend" id="planLegend">
   <span><span class="dot" style="background:var(--easy)"></span>Easy</span>
   <span><span class="dot" style="background:var(--quality)"></span>Quality</span>
   <span><span class="dot" style="background:var(--long)"></span>Long run</span>
   <span><span class="dot" style="background:var(--cross)"></span>แบดมินตัน</span>
-  <span><span class="dot" style="background:#a16207"></span>Time trial</span>
-  <span><span class="dot" style="background:#0284c7"></span>Shakeout</span>
+  <span><span class="dot" style="background:var(--test)"></span>Time trial</span>
+  <span><span class="dot" style="background:var(--shakeout)"></span>Shakeout</span>
   <span><span class="dot" style="background:var(--rest)"></span>พัก</span>
   <span><span class="dot" style="background:var(--race)"></span>แข่งจริง</span>
 </div>
 
-<main id="main"></main>
+<main>
+  <section id="viewPlan" class="view active"></section>
+
+  <section id="viewGlossary" class="view">
+    <div class="gsec">
+      <h2>1. โซนความเหนื่อย/เพซ (E, M, T, I, R)</h2>
+      <div class="terms">
+        <div class="term"><div class="t"><span class="abbr">E</span>Easy</div><p>เพซที่วิ่งแล้วยังคุยเป็นประโยคยาวๆ ได้สบาย หายใจไม่หอบ ใช้ในการซ้อมส่วนใหญ่ของแผน (วันธรรมดา วอร์มอัพ คูลดาวน์ วิ่งยาวส่วนใหญ่) สร้างระบบแอโรบิกโดยไม่เค้นร่างกาย ฟื้นตัวเร็ว</p></div>
+        <div class="term"><div class="t"><span class="abbr">M</span>Marathon / Steady pace</div><p>เร็วกว่า Easy แต่ยังคุมต่อเนื่องได้เป็นสิบๆ นาที "สบายแต่มีจุดหมาย" ใช้ท้ายวิ่งยาวเพื่อฝึกร่างกายให้คุ้นจังหวะใกล้เพซแข่งตอนขาล้า</p></div>
+        <div class="term"><div class="t"><span class="abbr">T</span>Threshold / Tempo</div><p>เพซ "หนักแบบสบายๆ" พูดได้แค่ประโยคสั้นๆ แต่คุมต่อเนื่องได้ 15-25+ นาที ฝึกกำจัดกรดแลคติกให้ดีขึ้น เป็นหัวใจของ tempo run</p></div>
+        <div class="term"><div class="t"><span class="abbr">I</span>Interval</div><p>เพซเร็วระดับ VO2max วิ่งต่อเนื่องได้ไม่นาน จึงแบ่งเป็นช่วงสั้นๆ สลับจ็อกฟื้นตัว ใช้ดันเพดานฟิตเนสสูงสุดในแผนช่วงท้าย</p></div>
+        <div class="term"><div class="t"><span class="abbr">R</span>Repetition</div><p>เร็วกว่า I อีก ใกล้เพซแข่งระยะสั้น เน้นความเร็ว/รูปแบบวิ่ง ใช้เบาๆ สัปดาห์สุดท้ายเพื่อ "ปลุกขา" ก่อนแข่ง</p></div>
+        <div class="term"><div class="t"><span class="abbr">VDOT</span>ตัวเลขฟิตเนส</div><p>ตัวเลขประเมินฟิตเนสโดยรวมของ Jack Daniels คำนวณจากผลแข่ง/time trial ใช้ทำนายเพซ E/M/T/I/R และเวลาแข่งที่เหมาะกับฟิตเนสปัจจุบัน ยิ่งฟิตขึ้น VDOT ยิ่งสูงขึ้น</p></div>
+      </div>
+    </div>
+
+    <div class="gsec">
+      <h2>2. ประเภทของเซสชันซ้อม</h2>
+      <div class="terms">
+        <div class="term"><div class="t">Easy run</div><p>วิ่งที่เพซ E ล้วนๆ ตลอดระยะ สร้างไมล์สะสม (aerobic base) โดยไม่เค้นระบบมากเกินไป เป็นวันซ้อมส่วนใหญ่ในแผน</p></div>
+        <div class="term"><div class="t">Long run</div><p>วิ่งระยะไกลที่สุดของสัปดาห์ ปกติเพซ E บางสัปดาห์มีท้ายรันเร่งเป็น M หรือเพซแข่งเพื่อจำลองความรู้สึกช่วงท้ายแข่งจริง</p></div>
+        <div class="term"><div class="t">Tempo run</div><p>มีท่อนกลางเป็นเพซ T ต่อเนื่อง คั่นด้วยวอร์มอัพ-คูลดาวน์เพซ E ก่อน-หลัง ฝึกวิ่งเร็วแบบคุมจังหวะได้นาน</p></div>
+        <div class="term"><div class="t">Cruise intervals</div><p>คล้าย tempo แต่แบ่งเพซ T เป็นช่วงสั้นๆ หลายรอบสลับจ็อกฟื้นตัว สะสมเวลาที่เพซ T ได้มากขึ้นโดยไม่ล้าเกินไป</p></div>
+        <div class="term"><div class="t">Intervals (I-pace)</div><p>ท่อนวิ่งเร็วระดับเพซ I สลับจ็อกฟื้นตัว ดันเพดาน VO2max เป็นท่อนที่หนักที่สุดในแผน มีเฉพาะช่วงร่างกายพร้อมแล้ว</p></div>
+        <div class="term"><div class="t">Race-pace pickup</div><p>ช่วงท้ายของ long run/tempo ที่ปรับเพซใกล้เพซแข่งจริง ให้ร่างกายและสมองคุ้นชินกับความรู้สึกวิ่งเพซแข่งล่วงหน้า</p></div>
+        <div class="term"><div class="t">Strides</div><p>ท่อนเร่งสั้นๆ (15-25 วิ) แบบควบคุมได้ ทำหลัง Easy run จบแล้ว 4-6 เที่ยว ฝึกความเร็ว/running economy โดยไม่สร้างความล้าสะสม</p></div>
+        <div class="term"><div class="t">Shakeout</div><p>วิ่งสั้นเบามาก (15-20 นาที) ก่อนแข่ง 1-2 วัน เพื่อคลายขา กระตุ้นระบบเล็กน้อยโดยไม่สร้างความล้าเพิ่ม</p></div>
+        <div class="term"><div class="t">Time trial</div><p>วิ่งจับเวลาเต็มที่ในระยะที่กำหนด ใช้แทนแข่งจริงเพื่อวัดฟิตเนสปัจจุบัน แล้วคำนวณ VDOT ใหม่ ปรับเพซซ้อมให้ตรงร่างกายจริง</p></div>
+      </div>
+    </div>
+
+    <div class="gsec">
+      <h2>3. โครงสร้าง/ศัพท์เกี่ยวกับการวางแผน</h2>
+      <div class="terms">
+        <div class="term"><div class="t">WU / CD</div><p>Warm-up / Cool-down — วิ่งเบาเพซ E ก่อน (WU) และหลัง (CD) ท่อนซ้อมหนัก เตรียมกล้ามเนื้อ-ข้อต่อ และลดความเสี่ยงบาดเจ็บ</p></div>
+        <div class="term"><div class="t">Cutback week</div><p>สัปดาห์ผ่อน ลดปริมาณ/ความหนักลง (ทุก ~4 สัปดาห์) ให้ร่างกายฟื้นตัวและซึมซับผลซ้อม ก่อนกลับไปเพิ่มโหลดต่อ</p></div>
+        <div class="term"><div class="t">Taper</div><p>ลดปริมาณซ้อมมากในสัปดาห์สุดท้ายก่อนแข่ง ให้ร่างกายพักฟื้นเต็มที่ พร้อมใช้พลังงานเต็มที่ในวันแข่ง</p></div>
+        <div class="term"><div class="t">กฎ 10%</div><p>เพิ่มระยะ/ปริมาณซ้อมรวมต่อสัปดาห์ไม่เกิน ~10% จากสัปดาห์ก่อน ให้กระดูก-เอ็น-กล้ามเนื้อปรับตัวทัน ลดความเสี่ยงบาดเจ็บ</p></div>
+        <div class="term"><div class="t">Negative split</div><p>ทำเวลาครึ่งหลังของระยะทางเร็วกว่าครึ่งแรก กลยุทธ์แข่งที่ปลอดภัยและมักให้ผลดีกว่าสำหรับนักวิ่งมือใหม่</p></div>
+        <div class="term"><div class="t">Cross-training</div><p>กิจกรรมออกกำลังกายชนิดอื่น (ในแผนนี้คือแบดมินตัน) เสริมสมรรถภาพหัวใจ-ปอดโดยใช้กล้ามเนื้อคนละแบบกับวิ่ง ลดความเสี่ยงบาดเจ็บจากการใช้ซ้ำ</p></div>
+      </div>
+    </div>
+
+    <div class="gsec">
+      <h2>4. สัญญาณเตือน & การฟังร่างกาย</h2>
+      <div class="terms">
+        <div class="term"><div class="t">HR (Heart Rate)</div><p>ใช้เช็คความหนักคู่กับเพซ วัน Easy ควรอยู่ระดับต่ำ-กลาง (ไม่เกิน ~150-155 bpm) ถ้าสูงกว่าปกติทั้งที่เพซเดิม อาจเป็นสัญญาณว่ายังฟื้นตัวไม่เต็มที่</p></div>
+        <div class="term"><div class="t">Overtraining</div><p>สะสมความล้าจนไม่ทันฟื้น สังเกตจาก: นอนไม่ค่อยหลับ, ชีพจรพักสูงขึ้นผิดปกติหลายวันติด, เจ็บจุดเดิมซ้ำๆ, เหนื่อยง่ายกว่าปกติ — พบสัญญาณเหล่านี้ให้ลดโหลดทันที</p></div>
+      </div>
+    </div>
+  </section>
+</main>
 
 <div class="overlay" id="overlay">
   <div class="sheet">
@@ -182,20 +261,11 @@
     </select>
 
     <div class="row2">
-      <div>
-        <label>ระยะจริง (กม.)</label>
-        <input type="number" step="0.1" id="fKm" placeholder="เช่น 5.2">
-      </div>
-      <div>
-        <label>เวลาที่ใช้ (นาที)</label>
-        <input type="number" step="1" id="fMin" placeholder="เช่น 42">
-      </div>
+      <div><label>ระยะจริง (กม.)</label><input type="number" step="0.1" id="fKm" placeholder="เช่น 5.2"></div>
+      <div><label>เวลาที่ใช้ (นาที)</label><input type="number" step="1" id="fMin" placeholder="เช่น 42"></div>
     </div>
     <div class="row2">
-      <div>
-        <label>HR เฉลี่ย (bpm)</label>
-        <input type="number" step="1" id="fHr" placeholder="เช่น 155">
-      </div>
+      <div><label>HR เฉลี่ย (bpm)</label><input type="number" step="1" id="fHr" placeholder="เช่น 155"></div>
       <div>
         <label>ความรู้สึก</label>
         <select id="fFeel">
@@ -216,6 +286,39 @@
       <button class="btn-save" onclick="saveLog()">บันทึกผล</button>
     </div>
     <div class="savedmsg" id="savedmsg">บันทึกแล้ว ✓</div>
+  </div>
+</div>
+
+<div class="overlay" id="settingsOverlay">
+  <div class="sheet settingsbox">
+    <h2>⚙️ ตั้งค่าซิงก์ข้อมูลผ่าน GitHub</h2>
+    <div class="meta">เก็บผลบันทึกไว้ใน repo GitHub ของคุณเอง (ไฟล์ training-log.json) เพื่อให้เปิดจากคอมและมือถือแล้วเห็นข้อมูลเดียวกัน โดยไม่ต้อง Export/Import เอง</div>
+
+    <label>GitHub username</label>
+    <input id="cfgOwner" placeholder="เช่น armrunner">
+    <label>ชื่อ repository</label>
+    <input id="cfgRepo" placeholder="เช่น 10k-tracker">
+    <label>Personal Access Token</label>
+    <div class="pwrow">
+      <input id="cfgToken" type="password" placeholder="github_pat_...">
+      <button onclick="togglePw()">👁</button>
+    </div>
+    <div class="hint">
+      สร้างโทเคนแบบจำกัดสิทธิ์เฉพาะ repo นี้ที่ github.com/settings/personal-access-tokens/new →
+      เลือก "Only select repositories" เลือก repo ของคุณ → Permissions → Contents = <b>Read and write</b> →
+      ตั้งวันหมดอายุ (เช่นหลัง 10 ก.ย.) → Generate token แล้วคัดลอกมาวางที่นี่<br>
+      โทเคนนี้เก็บไว้ในเบราว์เซอร์นี้เท่านั้น ไม่ผ่านเซิร์ฟเวอร์ใดๆ ของ Claude
+    </div>
+
+    <div class="actions" style="margin-top:14px;">
+      <button class="btn-close" onclick="closeSettings()">ปิด</button>
+      <button class="btn-close" onclick="testConnection()">ทดสอบการเชื่อมต่อ</button>
+      <button class="btn-save" onclick="saveSettings()">บันทึกการตั้งค่า</button>
+    </div>
+    <div class="statusmsg" id="settingsStatus"></div>
+    <div class="actions" style="margin-top:8px;">
+      <button class="btn-close" style="flex:none;padding:8px 14px;font-size:0.78rem;" onclick="clearSettings()">ลบการตั้งค่าซิงก์</button>
+    </div>
   </div>
 </div>
 
@@ -286,43 +389,216 @@ const PLAN = [
 const THAI_DOW = ["อา","จ","อ","พ","พฤ","ศ","ส"];
 const TYPE_LABEL = {easy:"Easy",quality:"Quality",long:"Long run",rest:"พัก",cross:"แบดมินตัน",test:"Time Trial",shakeout:"Shakeout",race:"แข่งจริง"};
 
-const STORAGE_KEY = "runPlan10k_logs_v1";
+const LOGS_KEY = "runPlan10k_logs_v1";
+const CFG_KEY = "runPlan10k_ghconfig_v1";
 let LOGS = {};
-try{
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(raw) LOGS = JSON.parse(raw);
-}catch(e){ console.warn("โหลดข้อมูลเดิมไม่สำเร็จ", e); }
+let GH_SHA = null;
+let GH_SYNCING = false;
 
-function todayStr(){
-  const d = new Date();
-  return d.toISOString().slice(0,10);
-}
-// ใช้วันที่ปัจจุบันจริงจากเครื่องผู้ใช้
+try{ const raw = localStorage.getItem(LOGS_KEY); if(raw) LOGS = JSON.parse(raw); }
+catch(e){ console.warn("โหลดข้อมูลเดิมไม่สำเร็จ", e); }
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
 const TODAY = todayStr();
 
-function persist(){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(LOGS)); }
-  catch(e){ alert("บันทึกลงเครื่องไม่สำเร็จ (พื้นที่เก็บข้อมูลอาจเต็ม หรือเบราว์เซอร์บล็อก) — แนะนำให้ Export ข้อมูลเก็บไว้เป็นไฟล์สำรอง"); }
+function persistLocal(){
+  try{ localStorage.setItem(LOGS_KEY, JSON.stringify(LOGS)); }
+  catch(e){ console.warn("บันทึกลงเครื่องไม่สำเร็จ", e); }
 }
 
+/* ---------- GitHub sync ---------- */
+function getCfg(){
+  try{ const raw = localStorage.getItem(CFG_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
+}
+function setCfg(cfg){ localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+function clearCfg(){ localStorage.removeItem(CFG_KEY); GH_SHA=null; updateSyncline("💾 บันทึกในเบราว์เซอร์นี้เท่านั้น — กด ⚙️ เพื่อตั้งค่าซิงก์ผ่าน GitHub"); }
+
+function b64EncodeUnicode(str){
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (m,p1)=>String.fromCharCode('0x'+p1)));
+}
+function b64DecodeUnicode(str){
+  return decodeURIComponent(atob(str.replace(/\s/g,'')).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+}
+
+function updateSyncline(text){
+  const el = document.getElementById("syncline");
+  if(el) el.textContent = text;
+}
+
+async function ghLoad(silent){
+  const cfg = getCfg();
+  if(!cfg || !cfg.owner || !cfg.repo || !cfg.token) return {ok:false, reason:"no-config"};
+  const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path||'training-log.json'}`;
+  try{
+    const r = await fetch(url, {headers:{
+      "Authorization": `token ${cfg.token}`,
+      "Accept": "application/vnd.github+json"
+    }});
+    if(r.status === 200){
+      const body = await r.json();
+      GH_SHA = body.sha;
+      const text = b64DecodeUnicode(body.content);
+      const remote = JSON.parse(text);
+      LOGS = Object.assign({}, LOGS, remote);
+      persistLocal();
+      if(!silent) updateSyncline("☁️ ซิงก์แล้ว (โหลดข้อมูลจาก GitHub สำเร็จ)");
+      return {ok:true, existed:true};
+    } else if(r.status === 404){
+      GH_SHA = null;
+      if(!silent) updateSyncline("☁️ เชื่อมต่อ GitHub สำเร็จ — ยังไม่มีไฟล์ข้อมูล จะสร้างให้อัตโนมัติเมื่อบันทึกครั้งแรก");
+      return {ok:true, existed:false};
+    } else {
+      const errBody = await r.text();
+      if(!silent) updateSyncline("⚠️ เชื่อมต่อ GitHub ไม่สำเร็จ ("+r.status+")");
+      return {ok:false, status:r.status, body:errBody};
+    }
+  }catch(e){
+    if(!silent) updateSyncline("⚠️ เชื่อมต่อ GitHub ไม่สำเร็จ (เครือข่าย/CORS) — ใช้ข้อมูลในเครื่องนี้ไปก่อน");
+    return {ok:false, error:e.toString()};
+  }
+}
+
+async function ghSave(){
+  const cfg = getCfg();
+  if(!cfg || !cfg.owner || !cfg.repo || !cfg.token) return {ok:false, reason:"no-config"};
+  if(GH_SYNCING) return {ok:false, reason:"busy"};
+  GH_SYNCING = true;
+  updateSyncline("🔄 กำลังซิงก์ขึ้น GitHub...");
+  const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path||'training-log.json'}`;
+  const content = b64EncodeUnicode(JSON.stringify(LOGS, null, 2));
+  const doPut = async (sha)=>{
+    return fetch(url, {
+      method:"PUT",
+      headers:{
+        "Authorization": `token ${cfg.token}`,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: "update training log " + new Date().toISOString(),
+        content: content,
+        sha: sha || undefined
+      })
+    });
+  };
+  try{
+    let r = await doPut(GH_SHA);
+    if(r.status === 409){
+      // conflict — refetch sha and retry once
+      const reload = await ghLoad(true);
+      r = await doPut(GH_SHA);
+    }
+    if(r.status === 200 || r.status === 201){
+      const body = await r.json();
+      GH_SHA = body.content ? body.content.sha : GH_SHA;
+      updateSyncline("☁️ ซิงก์ล่าสุด: " + new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}));
+      GH_SYNCING = false;
+      return {ok:true};
+    } else {
+      const errBody = await r.text();
+      updateSyncline("⚠️ ซิงก์ไม่สำเร็จ ("+r.status+") — บันทึกไว้ในเครื่องนี้แล้ว ลองใหม่ภายหลัง");
+      GH_SYNCING = false;
+      return {ok:false, status:r.status, body:errBody};
+    }
+  }catch(e){
+    updateSyncline("⚠️ ซิงก์ไม่สำเร็จ (เครือข่าย) — บันทึกไว้ในเครื่องนี้แล้ว ลองใหม่ภายหลัง");
+    GH_SYNCING = false;
+    return {ok:false, error:e.toString()};
+  }
+}
+
+function openSettings(){
+  const cfg = getCfg() || {};
+  document.getElementById("cfgOwner").value = cfg.owner || "";
+  document.getElementById("cfgRepo").value = cfg.repo || "";
+  document.getElementById("cfgToken").value = cfg.token || "";
+  document.getElementById("settingsStatus").className = "statusmsg";
+  document.getElementById("settingsStatus").textContent = "";
+  document.getElementById("settingsOverlay").classList.add("open");
+}
+function closeSettings(){ document.getElementById("settingsOverlay").classList.remove("open"); }
+function togglePw(){
+  const el = document.getElementById("cfgToken");
+  el.type = el.type === "password" ? "text" : "password";
+}
+async function saveSettings(){
+  const owner = document.getElementById("cfgOwner").value.trim();
+  const repo = document.getElementById("cfgRepo").value.trim();
+  const token = document.getElementById("cfgToken").value.trim();
+  const statusEl = document.getElementById("settingsStatus");
+  if(!owner || !repo || !token){
+    statusEl.className = "statusmsg err"; statusEl.textContent = "กรอกให้ครบทั้ง 3 ช่องก่อนบันทึก"; return;
+  }
+  setCfg({owner, repo, token, path:"training-log.json"});
+  statusEl.className = "statusmsg ok"; statusEl.textContent = "บันทึกการตั้งค่าแล้ว กำลังเชื่อมต่อ...";
+  const res = await ghLoad(false);
+  if(res.ok){
+    statusEl.className = "statusmsg ok";
+    statusEl.textContent = res.existed ? "เชื่อมต่อสำเร็จ โหลดข้อมูลเดิมจาก GitHub แล้ว ✓" : "เชื่อมต่อสำเร็จ ✓ (ยังไม่มีไฟล์ข้อมูล จะสร้างให้ตอนบันทึกครั้งแรก)";
+    render();
+  } else {
+    statusEl.className = "statusmsg err";
+    statusEl.textContent = "เชื่อมต่อไม่สำเร็จ: " + (res.status ? ("HTTP "+res.status+" — เช็ค username/repo/token") : (res.reason==="no-config" ? "กรอกข้อมูลไม่ครบ" : "เครือข่ายมีปัญหา"));
+  }
+}
+async function testConnection(){
+  const owner = document.getElementById("cfgOwner").value.trim();
+  const repo = document.getElementById("cfgRepo").value.trim();
+  const token = document.getElementById("cfgToken").value.trim();
+  const statusEl = document.getElementById("settingsStatus");
+  if(!owner || !repo || !token){
+    statusEl.className = "statusmsg err"; statusEl.textContent = "กรอกให้ครบทั้ง 3 ช่องก่อนทดสอบ"; return;
+  }
+  statusEl.className = "statusmsg ok"; statusEl.textContent = "กำลังทดสอบ...";
+  const tmp = getCfg();
+  setCfg({owner, repo, token, path:"training-log.json"});
+  const res = await ghLoad(false);
+  if(res.ok){
+    statusEl.className = "statusmsg ok";
+    statusEl.textContent = res.existed ? "เชื่อมต่อสำเร็จ ✓ พบไฟล์ข้อมูลเดิมแล้ว" : "เชื่อมต่อสำเร็จ ✓ (ยังไม่มีไฟล์ข้อมูล — ปกติสำหรับการตั้งค่าครั้งแรก)";
+  } else {
+    statusEl.className = "statusmsg err";
+    statusEl.textContent = "เชื่อมต่อไม่สำเร็จ: " + (res.status ? ("HTTP "+res.status+" — เช็ค username/repo/token ว่าถูกต้องและมีสิทธิ์ Contents: Read & write") : "เครือข่ายมีปัญหาหรือ token ไม่ถูกต้อง");
+    if(!tmp) clearCfg(); else setCfg(tmp);
+  }
+}
+function clearSettings(){
+  if(!confirm("ลบการตั้งค่าซิงก์ GitHub? ข้อมูลที่บันทึกในเครื่องนี้จะยังอยู่ แต่จะไม่ซิงก์ขึ้น GitHub อีก")) return;
+  clearCfg();
+  document.getElementById("cfgOwner").value = "";
+  document.getElementById("cfgRepo").value = "";
+  document.getElementById("cfgToken").value = "";
+  document.getElementById("settingsStatus").className = "statusmsg";
+  closeSettings();
+}
+
+/* ---------- Views / tabs ---------- */
+function showView(name){
+  document.getElementById("viewPlan").classList.toggle("active", name==="plan");
+  document.getElementById("viewGlossary").classList.toggle("active", name==="glossary");
+  document.getElementById("tabPlanBtn").classList.toggle("active", name==="plan");
+  document.getElementById("tabGlossaryBtn").classList.toggle("active", name==="glossary");
+  document.getElementById("planToolbar").style.display = name==="plan" ? "flex" : "none";
+  document.getElementById("planLegend").style.display = name==="plan" ? "flex" : "none";
+  location.hash = name;
+}
+
+/* ---------- Calendar render ---------- */
 function render(){
-  const main = document.getElementById("main");
+  const main = document.getElementById("viewPlan");
   main.innerHTML = "";
-  let weekNum = -1;
-  let weekDiv, grid;
+  let weekNum = -1, weekDiv, grid;
   PLAN.forEach(day=>{
     if(day.week !== weekNum){
       weekNum = day.week;
       weekDiv = document.createElement("div");
-      weekDiv.className = "week";
-      weekDiv.id = "week-"+weekNum;
+      weekDiv.className = "week"; weekDiv.id = "week-"+weekNum;
       const h = document.createElement("div");
       h.className = "week-title";
       const wLabel = weekNum===0 ? "ช่วงเริ่มต้น" : "สัปดาห์ "+weekNum;
       h.innerHTML = `<span>${wLabel}</span><span class="sub">${day.date.slice(5).replace('-','/')} ▸</span>`;
       weekDiv.appendChild(h);
-      grid = document.createElement("div");
-      grid.className = "grid";
+      grid = document.createElement("div"); grid.className = "grid";
       weekDiv.appendChild(grid);
       main.appendChild(weekDiv);
     }
@@ -378,10 +654,9 @@ function openSheet(date){
 
   document.getElementById("overlay").classList.add("open");
 }
-function closeSheet(){
-  document.getElementById("overlay").classList.remove("open");
-}
-function saveLog(){
+function closeSheet(){ document.getElementById("overlay").classList.remove("open"); }
+
+async function saveLog(){
   if(!currentDate) return;
   LOGS[currentDate] = {
     completed: document.getElementById("fCompleted").value,
@@ -391,15 +666,16 @@ function saveLog(){
     feel: document.getElementById("fFeel").value,
     notes: document.getElementById("fNotes").value,
   };
-  persist();
+  persistLocal();
   document.getElementById("savedmsg").style.display = "block";
   render();
+  const cfg = getCfg();
+  if(cfg){ await ghSave(); }
 }
 
 function scrollToToday(){
   let target = document.getElementById("week-"+ (PLAN.find(d=>d.date===TODAY)?.week ?? 0));
   if(!target){
-    // หาสัปดาห์ที่ใกล้วันนี้ที่สุด
     const closest = PLAN.reduce((a,b)=> Math.abs(new Date(b.date)-new Date(TODAY)) < Math.abs(new Date(a.date)-new Date(TODAY)) ? b : a);
     target = document.getElementById("week-"+closest.week);
   }
@@ -410,32 +686,41 @@ function exportData(){
   const blob = new Blob([JSON.stringify(LOGS, null, 2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url;
-  a.download = "10k-training-log-"+TODAY+".json";
-  a.click();
+  a.href = url; a.download = "10k-training-log-"+TODAY+".json"; a.click();
   URL.revokeObjectURL(url);
 }
 function importData(evt){
   const file = evt.target.files[0];
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = ()=>{
+  reader.onload = async ()=>{
     try{
       const parsed = JSON.parse(reader.result);
       LOGS = Object.assign({}, LOGS, parsed);
-      persist();
+      persistLocal();
       render();
+      const cfg = getCfg();
+      if(cfg){ await ghSave(); }
       alert("นำเข้าข้อมูลสำเร็จ");
-    }catch(e){
-      alert("ไฟล์ไม่ถูกต้อง ไม่สามารถนำเข้าได้");
-    }
+    }catch(e){ alert("ไฟล์ไม่ถูกต้อง ไม่สามารถนำเข้าได้"); }
   };
   reader.readAsText(file);
   evt.target.value = "";
 }
 
-render();
-setTimeout(scrollToToday, 100);
+/* ---------- init ---------- */
+(async function init(){
+  render();
+  const startView = location.hash === "#glossary" ? "glossary" : "plan";
+  showView(startView);
+  setTimeout(scrollToToday, 100);
+  const cfg = getCfg();
+  if(cfg){
+    updateSyncline("🔄 กำลังเชื่อมต่อ GitHub...");
+    const res = await ghLoad(false);
+    if(res.ok) render();
+  }
+})();
 </script>
 </body>
 </html>
