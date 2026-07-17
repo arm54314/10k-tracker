@@ -21,7 +21,7 @@
 
     --done:#0f9d73;
 
-    --act-run:var(--brand-600); --act-bike:#eda100; --act-badminton:#64748b;
+    --act-run:var(--brand-600); --act-bike:#eda100; --act-badminton:#64748b; --act-rest:#a78bfa;
 
     --surface-2:#eef2f1; --surface-3:#f5f8f7;
     --r-card:20px; --r-field:12px;
@@ -357,6 +357,7 @@
   <span>🏃 วิ่ง</span>
   <span>🚴 ปั่นจักรยาน</span>
   <span>🏸 แบดมินตัน</span>
+  <span>😴 พักร่างกาย</span>
   <span><span class="ring done"></span>ทำครบ</span>
   <span><span class="ring partial"></span>บางส่วน</span>
   <span>⏭️ ข้าม</span>
@@ -589,13 +590,15 @@ const PLAN = [
 const THAI_DOW = ["อา","จ","อ","พ","พฤ","ศ","ส"];
 const TYPE_LABEL = {easy:"Easy",quality:"Quality",long:"Long run",rest:"พัก",cross:"แบดมินตัน",test:"Time Trial",shakeout:"Shakeout",race:"แข่งจริง"};
 
-const ACTIVITY_ICON = {run:"🏃", bike:"🚴", badminton:"🏸"};
-const ACTIVITY_LABEL = {run:"วิ่ง", bike:"ปั่นจักรยาน", badminton:"แบดมินตัน"};
+const ACTIVITY_ICON = {run:"🏃", bike:"🚴", badminton:"🏸", rest:"😴"};
+const ACTIVITY_LABEL = {run:"วิ่ง", bike:"ปั่นจักรยาน", badminton:"แบดมินตัน", rest:"พักร่างกาย"};
 const PLAN_BY_DATE = {};
 PLAN.forEach(d=>{ PLAN_BY_DATE[d.date] = d; });
 function defaultActivityFor(date){
   const day = PLAN_BY_DATE[date];
-  return (day && day.type === "cross") ? "badminton" : "run";
+  if(day && day.type === "cross") return "badminton";
+  if(day && day.type === "rest") return "rest";
+  return "run";
 }
 
 const FEEL_SCORE = {great:5, good:4, ok:3, tough:2, pain:1};
@@ -814,7 +817,7 @@ function updateStats(){
   const loggedDates = Object.keys(LOGS).filter(d=>LOGS[d] && LOGS[d].completed);
   const skippedCount = loggedDates.filter(d=>LOGS[d].completed==="skipped").length;
   let totalKm = 0;
-  const counts = {run:0, bike:0, badminton:0};
+  const counts = {run:0, bike:0, badminton:0, rest:0};
   loggedDates.forEach(d=>{
     const log = LOGS[d];
     if(log.completed === "skipped") return;
@@ -841,7 +844,7 @@ function updateStats(){
 
 function buildDonut(counts, svgId, centerId, legendId){
   svgId = svgId || "donutSvg"; centerId = centerId || "donutCenter"; legendId = legendId || "ovLegend";
-  const total = counts.run + counts.bike + counts.badminton;
+  const total = counts.run + counts.bike + counts.badminton + counts.rest;
   const svg = document.getElementById(svgId);
   const center = document.getElementById(centerId);
   const legend = document.getElementById(legendId);
@@ -859,6 +862,7 @@ function buildDonut(counts, svgId, centerId, legendId){
     {key:"run", label:"🏃 วิ่ง", val:counts.run, color:"var(--act-run)", emph:true},
     {key:"bike", label:"🚴 ปั่นจักรยาน", val:counts.bike, color:"var(--act-bike)"},
     {key:"badminton", label:"🏸 แบดมินตัน", val:counts.badminton, color:"var(--act-badminton)"},
+    {key:"rest", label:"😴 พักร่างกาย", val:counts.rest, color:"var(--act-rest)"},
   ].filter(s=>s.val>0);
 
   let offset = 0;
@@ -984,7 +988,7 @@ function buildReport(){
   const loggedDates = Object.keys(LOGS).filter(d=>LOGS[d] && LOGS[d].completed).sort();
   const doneOrPartial = loggedDates.filter(d=>LOGS[d].completed !== "skipped");
   const skippedCount = loggedDates.length - doneOrPartial.length;
-  const counts = {run:0, bike:0, badminton:0};
+  const counts = {run:0, bike:0, badminton:0, rest:0};
   let totalKm = 0;
   const feelScores = [];
   const hrValues = [];
@@ -1121,6 +1125,7 @@ function addActivityRow(item){
         <option value="run">🏃 วิ่ง</option>
         <option value="bike">🚴 ปั่นจักรยาน (ไม่ต้องบันทึกระยะ)</option>
         <option value="badminton">🏸 แบดมินตัน (ไม่ต้องบันทึกระยะ)</option>
+        <option value="rest">😴 พักร่างกาย (ไม่ต้องบันทึกระยะ/เวลา)</option>
       </select>
       <button type="button" class="actRemove" onclick="this.closest('.actrow').remove()" title="ลบกิจกรรมนี้">✕</button>
     </div>
@@ -1141,9 +1146,20 @@ function addActivityRow(item){
 function onActivityTypeChange(select){
   const row = select.closest(".actrow");
   const kmInput = row.querySelector(".actKm");
+  const minInput = row.querySelector(".actMin");
+  const hrInput = row.querySelector(".actHr");
+  const fieldsWrap = row.querySelector(".actrow-fields");
   const isRun = select.value === "run";
+  const isRest = select.value === "rest";
   kmInput.style.display = isRun ? "" : "none";
   if(!isRun) kmInput.value = "";
+  if(isRest){
+    fieldsWrap.style.display = "none";
+    minInput.value = "";
+    hrInput.value = "";
+  } else {
+    fieldsWrap.style.display = "";
+  }
 }
 
 function collectActivities(){
